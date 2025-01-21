@@ -28,6 +28,26 @@ jobs:
         run: |
           cargo build --target ${{ matrix.TARGET }}
 
+  build-ferrocene:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        TARGET:
+          - armv7r-none-eabihf
+          - armv8r-none-eabihf
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install criticalup
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/ferrocene/criticalup/releases/download/v1.2.0/criticalup-installer.sh | sh
+      - name: Install Ferrocene
+        run: |
+          criticalup install
+      - name: Build
+        run: |
+          criticalup run cargo build --target ${{ matrix.TARGET }}
+
   docs:
     runs-on: ubuntu-latest
     strategy:
