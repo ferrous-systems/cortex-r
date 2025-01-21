@@ -81,6 +81,7 @@ jobs:
           rustup install ${{ matrix.rust }}
           rustup default ${{ matrix.rust }}
           rustup target add ${{ matrix.TARGET }}
+          rustup component add clippy
       - name: Clippy
         run: |
           cargo clippy --target ${{ matrix.TARGET }}
