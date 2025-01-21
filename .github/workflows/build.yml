@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         rust: [stable, 1.76]
-        TARGET:
+        target:
           - armebv7r-none-eabi
           - armebv7r-none-eabihf
           - armv7r-none-eabi
@@ -23,16 +23,16 @@ jobs:
         run: |
           rustup install ${{ matrix.rust }}
           rustup default ${{ matrix.rust }}
-          rustup target add ${{ matrix.TARGET }}
+          rustup target add ${{ matrix.target }}
       - name: Build
         run: |
-          cargo build --target ${{ matrix.TARGET }}
+          cargo build --target ${{ matrix.target }}
 
   build-ferrocene:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        TARGET:
+        target:
           - armv7r-none-eabihf
           - armv8r-none-eabihf
     steps:
@@ -48,14 +48,14 @@ jobs:
           criticalup install
       - name: Build
         run: |
-          criticalup run cargo build --target ${{ matrix.TARGET }}
+          criticalup run cargo build --target ${{ matrix.target }}
 
   docs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         rust: [stable, 1.76]
-        TARGET:
+        target:
           - armebv7r-none-eabi
           - armebv7r-none-eabihf
           - armv7r-none-eabi
@@ -67,10 +67,10 @@ jobs:
         run: |
           rustup install ${{ matrix.rust }}
           rustup default ${{ matrix.rust }}
-          rustup target add ${{ matrix.TARGET }}
+          rustup target add ${{ matrix.target }}
       - name: Build docs
         run: |
-          cargo doc --target ${{ matrix.TARGET }}
+          cargo doc --target ${{ matrix.target }}
 
   fmt:
     runs-on: ubuntu-latest
@@ -90,7 +90,7 @@ jobs:
     strategy:
       matrix:
         rust: [stable, 1.76]
-        TARGET:
+        target:
           - armebv7r-none-eabi
           - armebv7r-none-eabihf
           - armv7r-none-eabi
@@ -102,8 +102,8 @@ jobs:
         run: |
           rustup install ${{ matrix.rust }}
           rustup default ${{ matrix.rust }}
-          rustup target add ${{ matrix.TARGET }}
+          rustup target add ${{ matrix.target }}
           rustup component add clippy
       - name: Clippy
         run: |
-          cargo clippy --target ${{ matrix.TARGET }}
+          cargo clippy --target ${{ matrix.target }}
