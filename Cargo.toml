@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+    "cortex-r", "cortex-r-examples",
+    "cortex-r-rt",
+    "cortex-r-semihosting"
+]

@@ -1,0 +1,12 @@
+[package]
+authors = ["Jonathan Pallant <jonathan.pallant@ferrous-systems.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+name = "cortex-r-rt"
+description = "Run-time support for Arm Cortex-R"
+readme = "README.md"
+repository = "https://github.com/ferrous-systems/cortex-r.git"
+rust-version = "1.76"
+version = "0.1.0"
+
+[dependencies]
