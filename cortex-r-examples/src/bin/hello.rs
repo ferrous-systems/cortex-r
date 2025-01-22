@@ -21,7 +21,9 @@ pub extern "C" fn kmain() {
 ///
 /// Called by [`kmain`].
 fn main() -> Result<(), core::fmt::Error> {
-    cortex_r_semihosting::hprintln!("Hello, this is semihosting!");
+    let x = 1.0f64;
+    let y = x * 2.0;
+    cortex_r_semihosting::hprintln!("Hello, this is semihosting! x = {:0.3}, y = {:0.3}", x, y);
     panic!("I am a panic");
 }
 

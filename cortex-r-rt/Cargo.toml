@@ -10,3 +10,7 @@ rust-version = "1.76"
 version = "0.1.0"
 
 [dependencies]
+
+[features]
+# Enable the FPU on start-up, even on a soft-float EABI target
+eabi-fpu = []

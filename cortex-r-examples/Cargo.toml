@@ -13,3 +13,6 @@ version = "0.1.0"
 cortex-r = { path = "../cortex-r" }
 cortex-r-rt = { path = "../cortex-r-rt" }
 cortex-r-semihosting = { path = "../cortex-r-semihosting" }
+
+[features]
+eabi-fpu = ["cortex-r-rt/eabi-fpu"]

@@ -2,8 +2,18 @@
 
 #![no_std]
 
-// TODO: remove FPU init for non-FPU targets
-
+#[cfg(
+    all(
+        any(
+            cmr_architecture = "v7-r",
+            cmr_architecture = "v8-r"
+        ),
+        any(
+            cmr_abi="hard-float",
+            feature="eabi-fpu"
+        )
+    )
+)]
 core::arch::global_asm!(
     r#"
 
@@ -24,6 +34,39 @@ _start:
     // Enable VFP
     mov r0, #0x40000000
     vmsr fpexc, r0
+    // Jump to application
+    bl kmain
+    // In case the application returns, loop forever
+    b .
+
+"#
+);
+
+#[cfg(
+    all(
+        any(
+            cmr_architecture = "v7-r",
+            cmr_architecture = "v8-r"
+        ),
+        not(
+            any(
+                cmr_abi="hard-float",
+                feature="eabi-fpu"
+            )
+        )
+    )
+)]
+core::arch::global_asm!(
+    r#"
+
+.section .text.startup
+.global _start
+.code 32
+.align 0
+
+_start:
+    // Set stack pointer
+    ldr sp, =stack_top
     // Jump to application
     bl kmain
     // In case the application returns, loop forever
