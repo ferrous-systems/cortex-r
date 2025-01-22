@@ -1,0 +1,18 @@
+[package]
+authors = ["Jonathan Pallant <jonathan.pallant@ferrous-systems.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+name = "cortex-r-examples"
+description = "Examples for Arm Cortex-R"
+readme = "README.md"
+repository = "https://github.com/ferrous-systems/cortex-r.git"
+rust-version = "1.76"
+version = "0.1.0"
+
+[dependencies]
+cortex-r = { path = "../cortex-r" }
+cortex-r-rt = { path = "../cortex-r-rt" }
+cortex-r-semihosting = { path = "../cortex-r-semihosting" }
+
+[features]
+eabi-fpu = ["cortex-r-rt/eabi-fpu"]

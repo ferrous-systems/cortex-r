@@ -1,0 +1,109 @@
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+name: Build
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [stable, 1.76]
+        target:
+          - armebv7r-none-eabi
+          - armebv7r-none-eabihf
+          - armv7r-none-eabi
+          - armv7r-none-eabihf
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install rust
+        run: |
+          rustup install ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
+          rustup target add ${{ matrix.target }}
+      - name: Build
+        run: |
+          cargo build --target ${{ matrix.target }}
+
+  build-ferrocene:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - armv7r-none-eabihf
+          - armv8r-none-eabihf
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install criticalup
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/ferrocene/criticalup/releases/download/v1.2.0/criticalup-installer.sh | sh
+      - name: Install Ferrocene
+        env:
+          CRITICALUP_TOKEN: ${{ secrets.CRITICALUP_TOKEN }}
+        run: |
+          criticalup install
+      - name: Build
+        run: |
+          criticalup run cargo build --target ${{ matrix.target }}
+
+  docs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [stable, 1.76]
+        target:
+          - armebv7r-none-eabi
+          - armebv7r-none-eabihf
+          - armv7r-none-eabi
+          - armv7r-none-eabihf
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install rust
+        run: |
+          rustup install ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
+          rustup target add ${{ matrix.target }}
+      - name: Build docs
+        run: |
+          cargo doc --target ${{ matrix.target }}
+
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install rust
+        run: |
+          rustup install stable
+          rustup default stable
+      - name: Format
+        run: |
+          cargo fmt --check
+
+  clippy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [stable, 1.76]
+        target:
+          - armebv7r-none-eabi
+          - armebv7r-none-eabihf
+          - armv7r-none-eabi
+          - armv7r-none-eabihf
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install rust
+        run: |
+          rustup install ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
+          rustup target add ${{ matrix.target }}
+          rustup component add clippy
+      - name: Clippy
+        run: |
+          cargo clippy --target ${{ matrix.target }}
