@@ -10,16 +10,20 @@ These libraries have been written by Ferrous Systems, and are based on the
 
 There are currently three libraries here:
 
-* [`cortex-r`](./cortex-r/) - support library for Cortex-R CPUs (like [`cortex-m`])
-* [`cortex-r-rt`](./cortex-r-rt/) - run-time library for Cortex-R CPUs (like [`cortex-m-rt`])
-* [`cortex-r-semihosting`](./cortex-r-semihosting/) - semihosting library for Cortex-R CPUs (like [`cortex-m-semihosting`])
+* [cortex-r](./cortex-r/) - support library for Cortex-R CPUs (like [cortex-m])
+* [cortex-r-rt](./cortex-r-rt/) - run-time library for Cortex-R CPUs (like [cortex-m-rt])
+* [cortex-r-semihosting](./cortex-r-semihosting/) - semihosting library for Cortex-R CPUs (like [cortex-m-semihosting])
 
-There are also example programs for QEMU in [`cortex-r-examples`](./cortex-r-examples/).
+There are also example programs for QEMU in the [cortex-r-examples](./cortex-r-examples/) folder.
+
+[cortex-m]: https://crates.io/crates/cortex-m
+[cortex-m-rt]: https://crates.io/crates/cortex-m-rt
+[cortex-m-semihosting]: https://crates.io/crates/cortex-m-semihosting
 
 ## Licence
 
-Copyright (c) Ferrous Systems, 2025
-Copyright (c) The Cortex-M Team <cortex-m@teams.rust-embedded.org>
+* Copyright (c) Ferrous Systems, 2025
+* Copyright (c) The Cortex-M Team <cortex-m@teams.rust-embedded.org>
 
 Licensed under either [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE) at
 your option.
