@@ -1,10 +1,15 @@
 //! Host I/O
 
-// Fixing this lint requires a breaking change that does not add much value
-#![allow(clippy::result_unit_err)]
-
 use crate::nr;
 use core::{fmt, slice};
+
+/// Ways we can fail to perform semihosting
+#[derive(Debug, Copy, Clone)]
+#[non_exhaustive]
+pub enum Error {
+    /// We got this error code from the host
+    HostError(isize),
+}
 
 /// A byte stream to the host (e.g., host's stdout or stderr).
 #[derive(Clone, Copy)]
@@ -14,7 +19,7 @@ pub struct HostStream {
 
 impl HostStream {
     /// Attempts to write an entire `buffer` into this sink
-    pub fn write_all(&mut self, buffer: &[u8]) -> Result<(), ()> {
+    pub fn write_all(&mut self, buffer: &[u8]) -> Result<(), Error> {
         write_all(self.fd, buffer)
     }
 }
@@ -26,7 +31,7 @@ impl fmt::Write for HostStream {
 }
 
 /// Construct a new handle to the host's standard error.
-pub fn hstderr() -> Result<HostStream, ()> {
+pub fn hstderr() -> Result<HostStream, Error> {
     // There is actually no stderr access in ARM Semihosting documentation. Use
     // convention used in libgloss.
     // See: libgloss/arm/syscalls.c, line 139.
@@ -35,19 +40,19 @@ pub fn hstderr() -> Result<HostStream, ()> {
 }
 
 /// Construct a new handle to the host's standard output.
-pub fn hstdout() -> Result<HostStream, ()> {
+pub fn hstdout() -> Result<HostStream, Error> {
     open(":tt\0", nr::open::W_TRUNC)
 }
 
-fn open(name: &str, mode: usize) -> Result<HostStream, ()> {
+fn open(name: &str, mode: usize) -> Result<HostStream, Error> {
     let name = name.as_bytes();
     match unsafe { syscall!(OPEN, name.as_ptr(), mode, name.len() - 1) } as isize {
-        -1 => Err(()),
+        -1 => Err(Error::HostError(-1)),
         fd => Ok(HostStream { fd: fd as usize }),
     }
 }
 
-fn write_all(fd: usize, mut buffer: &[u8]) -> Result<(), ()> {
+fn write_all(fd: usize, mut buffer: &[u8]) -> Result<(), Error> {
     while !buffer.is_empty() {
         match unsafe { syscall!(WRITE, fd, buffer.as_ptr(), buffer.len()) } {
             // Done
@@ -62,7 +67,7 @@ fn write_all(fd: usize, mut buffer: &[u8]) -> Result<(), ()> {
             // For good measure, we allow up to negative 15.
             n if n > 0xfffffff0 => return Ok(()),
             // Error
-            _ => return Err(()),
+            n => return Err(Error::HostError(n as isize)),
         }
     }
     Ok(())
