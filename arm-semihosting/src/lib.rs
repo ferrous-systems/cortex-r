@@ -151,12 +151,12 @@ pub unsafe fn syscall1(_nr: usize, _arg: usize) -> usize {
     if cfg!(all(target_arch = "arm", not(feature = "no-semihosting"))) {
         let mut nr = _nr as u32;
         let arg = _arg as u32;
-        #[cfg(arm_isa = "A64")]
+        #[cfg(arm_isa = "a64")]
         unsafe {
             core::arch::asm!("HLT 0xF000", inout("r0") nr, in("r1") arg, options(nostack, preserves_flags));
         }
 
-        #[cfg(arm_isa = "A32")]
+        #[cfg(arm_isa = "a32")]
         unsafe {
             // We have observed some systems that accepted the HLT instruction
             // but not SVC instruction, even though both should be equivalent.
@@ -168,7 +168,17 @@ pub unsafe fn syscall1(_nr: usize, _arg: usize) -> usize {
             }
         }
 
-        #[cfg(arm_isa = "T32")]
+        #[cfg(all(arm_isa = "t32", not(arm_profile = "m")))]
+        unsafe {
+            // See note about about SVC vs HLT
+            if cfg!(feature = "use-hlt") {
+                core::arch::asm!("HLT 0x3C", inout("r0") nr, in("r1") arg, options(nostack, preserves_flags));
+            } else {
+                core::arch::asm!("SVC 0xAB", inout("r0") nr, in("r1") arg, options(nostack, preserves_flags));
+            }
+        }
+
+        #[cfg(all(arm_isa = "t32", arm_profile = "m"))]
         unsafe {
             core::arch::asm!("BKPT 0xAB", inout("r0") nr, in("r1") arg, options(nostack, preserves_flags));
         }

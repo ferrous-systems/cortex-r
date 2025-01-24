@@ -12,6 +12,14 @@ pub fn process() {
 
 /// Process a given target string, and emit cargo configuration to standard out.
 pub fn process_target(target: &str) {
+    if let Some(isa) = Isa::get(target) {
+        println!(r#"cargo:rustc-cfg=arm_isa="{}""#, isa);
+    }
+    println!(
+        r#"cargo:rustc-check-cfg=cfg(arm_isa, values({}))"#,
+        Isa::values()
+    );
+
     if let Some(arch) = Arch::get(target) {
         println!(r#"cargo:rustc-cfg=arm_architecture="{}""#, arch);
     }
@@ -20,12 +28,12 @@ pub fn process_target(target: &str) {
         Arch::values()
     );
 
-    if let Some(isa) = Isa::get(target) {
-        println!(r#"cargo:rustc-cfg=arm_isa="{}""#, isa);
+    if let Some(profile) = Profile::get(target) {
+        println!(r#"cargo:rustc-cfg=arm_profile="{}""#, profile);
     }
     println!(
-        r#"cargo:rustc-check-cfg=cfg(arm_isa, values({}))"#,
-        Isa::values()
+        r#"cargo:rustc-check-cfg=cfg(arm_profile, values({}))"#,
+        Profile::values()
     );
 
     let endianness = Endianness::get(target);
@@ -87,9 +95,9 @@ impl core::fmt::Display for Isa {
             f,
             "{}",
             match self {
-                Isa::A64 => "A64",
-                Isa::A32 => "A32",
-                Isa::T32 => "T32",
+                Isa::A64 => "a64",
+                Isa::A32 => "a32",
+                Isa::T32 => "t32",
             }
         )
     }
@@ -143,6 +151,17 @@ impl Arch {
         }
     }
 
+    /// Get the Arm Architecture Profile
+    pub fn profile(&self) -> Profile {
+        match self {
+            Arch::Armv6M | Arch::Armv7M | Arch::Armv7EM | Arch::Armv8MBase | Arch::Armv8MMain => {
+                Profile::M
+            }
+            Arch::Armv7R | Arch::Armv8R => Profile::R,
+            Arch::Armv7A | Arch::Armv8A => Profile::A,
+        }
+    }
+
     /// Get a comma-separated list of values, suitable for cfg-check
     pub fn values() -> String {
         let string_versions: Vec<String> = [
@@ -178,6 +197,47 @@ impl core::fmt::Display for Arch {
                 Arch::Armv8MMain => "v8-m.main",
                 Arch::Armv7A => "v7-a",
                 Arch::Armv8A => "v8-a",
+            }
+        )
+    }
+}
+
+/// The Arm Architecture Profile.
+pub enum Profile {
+    /// Microcontrollers
+    M,
+    /// Real-Time
+    R,
+    /// Applications
+    A,
+}
+
+impl Profile {
+    /// Decode a target string
+    pub fn get(target: &str) -> Option<Profile> {
+        let arch = Arch::get(target)?;
+        Some(arch.profile())
+    }
+
+    /// Get a comma-separated list of values, suitable for cfg-check
+    pub fn values() -> String {
+        let string_versions: Vec<String> = [Profile::A, Profile::R, Profile::M]
+            .iter()
+            .map(|i| format!(r#""{i}""#))
+            .collect();
+        string_versions.join(", ")
+    }
+}
+
+impl core::fmt::Display for Profile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Profile::M => "m",
+                Profile::R => "r",
+                Profile::A => "a",
             }
         )
     }
