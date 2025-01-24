@@ -8,14 +8,11 @@ use std::io::Write;
 
 fn main() {
     match std::env::var("TARGET").expect("TARGET not set").as_str() {
-        "armv7r-none-eabi" | "armv7r-none-eabihf" => {
-            write("versatileab.ld", include_bytes!("versatileab.ld"));
-        }
         "armv8r-none-eabihf" => {
             write("mps3-an536.ld", include_bytes!("mps3-an536.ld"));
         }
-        other => {
-            panic!("Target {other} is not supported");
+        _ => {
+            write("versatileab.ld", include_bytes!("versatileab.ld"));
         }
     }
 }
