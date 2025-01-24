@@ -12,7 +12,8 @@ There are currently three libraries here:
 
 * [cortex-r](./cortex-r/) - support library for Cortex-R CPUs (like [cortex-m])
 * [cortex-r-rt](./cortex-r-rt/) - run-time library for Cortex-R CPUs (like [cortex-m-rt])
-* [cortex-r-semihosting](./cortex-r-semihosting/) - semihosting library for Cortex-R CPUs (like [cortex-m-semihosting])
+* [arm-semihosting](./arm-semihosting/) - semihosting library for many kinds of Arm CPU (like [cortex-m-semihosting])
+* [arm-targets](./arm-targets/) - a helper library for your build.rs that sets various `--cfg` flags according to the current target
 
 There are also example programs for QEMU in the [cortex-r-examples](./cortex-r-examples/) folder.
 

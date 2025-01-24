@@ -1,0 +1,13 @@
+[package]
+authors = ["Jonathan Pallant <jonathan.pallant@ferrous-systems.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+name = "arm-targets"
+description = "Compile-time feature detection for Arm processors"
+readme = "README.md"
+repository = "https://github.com/ferrous-systems/cortex-r.git"
+rust-version = "1.76"
+version = "0.1.0"
+
+
+[dependencies]

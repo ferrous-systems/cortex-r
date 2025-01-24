@@ -30,6 +30,11 @@
 //! Semihosting operations are *very* slow. Like, each WRITE operation can take
 //! hundreds of milliseconds.
 //!
+//! # References
+//!
+//! * Arm "ARM DS-5 Debugger User Guide Version 5.26"
+//!   * <https://developer.arm.com/documentation/dui0446/z/controlling-target-execution/using-semihosting-to-access-resources-on-the-host-computer>
+//!
 //! # Example
 //!
 //! ## Using `hio::hstdout`
@@ -37,7 +42,7 @@
 //! This example will demonstrate how to print formatted strings.
 //!
 //! ```no_run
-//! use cortex_r_semihosting::hio;
+//! use arm_semihosting::hio;
 //! use core::fmt::Write;
 //!
 //! // This function will be called by the application
@@ -146,9 +151,28 @@ pub unsafe fn syscall1(_nr: usize, _arg: usize) -> usize {
     if cfg!(all(target_arch = "arm", not(feature = "no-semihosting"))) {
         let mut nr = _nr as u32;
         let arg = _arg as u32;
+        #[cfg(arm_isa = "A64")]
         unsafe {
-            core::arch::asm!("SVC 0x123456", inout("r0") nr, in("r1") arg, options(nostack, preserves_flags));
+            core::arch::asm!("HLT 0xF000", inout("r0") nr, in("r1") arg, options(nostack, preserves_flags));
         }
+
+        #[cfg(arm_isa = "A32")]
+        unsafe {
+            // We have observed some systems that accepted the HLT instruction
+            // but not SVC instruction, even though both should be equivalent.
+            // So prefer SVC but let the user pick HLT.
+            if cfg!(feature = "use-hlt") {
+                core::arch::asm!("HLT 0xF000", inout("r0") nr, in("r1") arg, options(nostack, preserves_flags));
+            } else {
+                core::arch::asm!("SVC 0x123456", inout("r0") nr, in("r1") arg, options(nostack, preserves_flags));
+            }
+        }
+
+        #[cfg(arm_isa = "T32")]
+        unsafe {
+            core::arch::asm!("BKPT 0xAB", inout("r0") nr, in("r1") arg, options(nostack, preserves_flags));
+        }
+
         return nr as usize;
     }
 

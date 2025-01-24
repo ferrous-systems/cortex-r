@@ -28,6 +28,23 @@ jobs:
         run: |
           cargo build --target ${{ matrix.target }}
 
+  build-host:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [stable, 1.76]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install rust
+        run: |
+          rustup install ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
+      - name: Build
+        run: |
+          cd arm-targets
+          cargo build
+
   build-ferrocene:
     runs-on: ubuntu-latest
     strategy:
@@ -72,6 +89,23 @@ jobs:
         run: |
           cargo doc --target ${{ matrix.target }}
 
+  docs-host:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [stable, 1.76]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install rust
+        run: |
+          rustup install ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
+      - name: Build docs
+        run: |
+          cd arm-targets
+          cargo doc
+
   fmt:
     runs-on: ubuntu-latest
     steps:
@@ -83,6 +117,20 @@ jobs:
           rustup default stable
       - name: Format
         run: |
+          cargo fmt --check
+
+  fmt-host:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install rust
+        run: |
+          rustup install stable
+          rustup default stable
+      - name: Format
+        run: |
+          cd arm-targets
           cargo fmt --check
 
   clippy:
@@ -107,3 +155,21 @@ jobs:
       - name: Clippy
         run: |
           cargo clippy --target ${{ matrix.target }}
+
+  clippy-host:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [stable, 1.76]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install rust
+        run: |
+          rustup install ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
+          rustup component add clippy
+      - name: Clippy
+        run: |
+          cd arm-targets
+          cargo clippy

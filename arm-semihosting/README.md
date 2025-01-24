@@ -1,8 +1,9 @@
-# `cortex-r-semihosting`
+# `arm-semihosting`
 
-> Semihosting for ARM Cortex-R processors
+> Semihosting for ARM Cortex-M, Cortex-R and Cortex-A processors
 
-This is a port of [`cortex-m-semihosting`] to Arm Cortex-R.
+This is a port of [`cortex-m-semihosting`] but widened to support more Arm
+architecture profiles.
 
 [`cortex-m-semihosting`]: https://crates.io/crates/cortex-m-semihosting
 
