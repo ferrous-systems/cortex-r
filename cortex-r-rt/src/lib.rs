@@ -4,7 +4,7 @@
 
 #[cfg(all(
     any(arm_architecture = "v7-r", arm_architecture = "v8-r"),
-    any(arm_float_abi = "hard", feature = "eabi-fpu")
+    any(target_abi = "eabihf", feature = "eabi-fpu")
 ))]
 core::arch::global_asm!(
     r#"
@@ -36,7 +36,7 @@ _start:
 
 #[cfg(all(
     any(arm_architecture = "v7-r", arm_architecture = "v8-r"),
-    not(any(arm_float_abi = "hard", feature = "eabi-fpu"))
+    not(any(target_abi = "eabihf", feature = "eabi-fpu"))
 ))]
 core::arch::global_asm!(
     r#"
