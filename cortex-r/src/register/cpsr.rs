@@ -142,7 +142,7 @@ impl core::fmt::Debug for Cpsr {
             self.i() as u8,
             self.f() as u8,
             self.t() as u8,
-            self.mode() as u8,
+            self.mode(),
         )
     }
 }
