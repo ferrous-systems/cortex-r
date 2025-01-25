@@ -35,21 +35,6 @@ pub fn process_target(target: &str) {
         r#"cargo:rustc-check-cfg=cfg(arm_profile, values({}))"#,
         Profile::values()
     );
-
-    let endianness = Endianness::get(target);
-    println!(r#"cargo:rustc-cfg=arm_endianness="{}""#, endianness);
-    println!(
-        r#"cargo:rustc-check-cfg=cfg(arm_endianness, values({}))"#,
-        Endianness::values()
-    );
-
-    if let Some(float_abi) = FloatAbi::get(target) {
-        println!(r#"cargo:rustc-cfg=arm_float_abi="{}""#, float_abi);
-    }
-    println!(
-        r#"cargo:rustc-check-cfg=cfg(arm_float_abi, values({}))"#,
-        FloatAbi::values()
-    );
 }
 
 /// The Arm Instruction Set
@@ -238,93 +223,6 @@ impl core::fmt::Display for Profile {
                 Profile::M => "m",
                 Profile::R => "r",
                 Profile::A => "a",
-            }
-        )
-    }
-}
-
-/// How does the processor handle multi-byte values
-pub enum Endianness {
-    /// The least-significant byte goes in the lowest numbered address
-    Little,
-    /// The most-significant byte goes in the lowest numbered address
-    Big,
-}
-
-impl Endianness {
-    /// Decode a target string
-    ///
-    /// We check for the known big-endian targets and assume anything else is
-    /// little-endian.
-    pub fn get(target: &str) -> Endianness {
-        if target.starts_with("aarch64be") || target.starts_with("armeb") {
-            Endianness::Big
-        } else {
-            Endianness::Little
-        }
-    }
-
-    /// Get a comma-separated list of values, suitable for cfg-check
-    pub fn values() -> String {
-        let string_versions: Vec<String> = [Endianness::Little, Endianness::Big]
-            .iter()
-            .map(|i| format!(r#""{i}""#))
-            .collect();
-        string_versions.join(", ")
-    }
-}
-
-impl core::fmt::Display for Endianness {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Endianness::Little => "little",
-                Endianness::Big => "big",
-            }
-        )
-    }
-}
-
-/// How are floating point values passed to functions?
-pub enum FloatAbi {
-    /// Floats are passed using integer registers
-    Soft,
-    /// Floats are passed using FPU registers
-    Hard,
-}
-
-impl FloatAbi {
-    /// Decode a target string
-    pub fn get(target: &str) -> Option<FloatAbi> {
-        if target.ends_with("-eabi") {
-            Some(FloatAbi::Soft)
-        } else if target.ends_with("-eabihf") {
-            Some(FloatAbi::Hard)
-        } else {
-            None
-        }
-    }
-
-    /// Get a comma-separated list of values, suitable for cfg-check
-    pub fn values() -> String {
-        let string_versions: Vec<String> = [FloatAbi::Soft, FloatAbi::Hard]
-            .iter()
-            .map(|i| format!(r#""{i}""#))
-            .collect();
-        string_versions.join(", ")
-    }
-}
-
-impl core::fmt::Display for FloatAbi {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                FloatAbi::Soft => "soft",
-                FloatAbi::Hard => "hard",
             }
         )
     }
