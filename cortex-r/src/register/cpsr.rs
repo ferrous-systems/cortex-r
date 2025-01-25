@@ -2,6 +2,7 @@
 
 /// The *Current Program Status Register* (CPSR)
 #[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
 pub struct Cpsr(u32);
 
 impl Cpsr {
@@ -27,6 +28,8 @@ impl Cpsr {
     pub const F_BIT: u32 = 1 << 6;
     /// The bitmask for Thumb state
     pub const T_BIT: u32 = 1 << 5;
+    /// The bitmask for Processor Mode
+    pub const MODE_BITS: u32 = 0x1F;
 
     /// Reads the *Current Program Status Register*
     #[inline]
@@ -35,8 +38,8 @@ impl Cpsr {
         // Safety: Reading this register has no side-effects and is atomic
         #[cfg(target_arch = "arm")]
         unsafe {
-            core::arch::asm!("mrs {}, CPSR", out(reg) r, options(nomem, nostack, preserves_flags))
-        };
+            core::arch::asm!("mrs {}, CPSR", out(reg) r, options(nomem, nostack, preserves_flags));
+        }
         #[cfg(not(target_arch = "arm"))]
         {
             r = 0;
@@ -109,13 +112,25 @@ impl Cpsr {
     pub fn t(self) -> bool {
         (self.0 & Self::T_BIT) != 0
     }
+
+    /// Get the current mode
+    #[inline]
+    pub fn mode(self) -> u8 {
+        (self.0 & Self::MODE_BITS) as u8
+    }
+
+    /// Are we in supervisor mode?
+    #[inline]
+    pub fn is_supervisor_mode(self) -> bool {
+        self.mode() == 0b10011
+    }
 }
 
 impl core::fmt::Debug for Cpsr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
-            "CPSR {{ N={} Z={} C={} V={} Q={} J={} E={} A={} I={} F={} T={} }}",
+            "CPSR {{ N={} Z={} C={} V={} Q={} J={} E={} A={} I={} F={} T={} MODE={:#02x} }}",
             self.n() as u8,
             self.z() as u8,
             self.c() as u8,
@@ -127,6 +142,7 @@ impl core::fmt::Debug for Cpsr {
             self.i() as u8,
             self.f() as u8,
             self.t() as u8,
+            self.mode() as u8,
         )
     }
 }
@@ -134,6 +150,6 @@ impl core::fmt::Debug for Cpsr {
 #[cfg(feature = "defmt")]
 impl defmt::Format for Cpsr {
     fn format(&self, f: defmt::Formatter) {
-        defmt::write!(f, "CPSR {{ N={0=31..32} Z={0=30..31} C={0=29..30} V={0=28..29} Q={0=27..28} J={0=24..25} E={0=9..10} A={0=8..9} I={0=7..8} F={0=6..7} T={0=5..6} }}", self.0)
+        defmt::write!(f, "CPSR {{ N={0=31..32} Z={0=30..31} C={0=29..30} V={0=28..29} Q={0=27..28} J={0=24..25} E={0=9..10} A={0=8..9} I={0=7..8} F={0=6..7} T={0=5..6} MODE={0=0..5} }}", self.0)
     }
 }

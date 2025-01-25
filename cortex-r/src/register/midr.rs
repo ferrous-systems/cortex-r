@@ -2,6 +2,7 @@
 
 /// The *Main ID Register* (MIDR)
 #[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
 pub struct Midr(u32);
 
 impl Midr {
@@ -12,8 +13,8 @@ impl Midr {
         // Safety: Reading this register has no side-effects and is atomic
         #[cfg(target_arch = "arm")]
         unsafe {
-            core::arch::asm!("mrc p15, 0, {}, c0, c0, 0", out(reg) r, options(nomem, nostack, preserves_flags))
-        };
+            core::arch::asm!("mrc p15, 0, {}, c0, c0, 0", out(reg) r, options(nomem, nostack, preserves_flags));
+        }
         #[cfg(not(target_arch = "arm"))]
         {
             r = 0;

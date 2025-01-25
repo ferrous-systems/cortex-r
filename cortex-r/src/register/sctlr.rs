@@ -2,6 +2,7 @@
 
 /// The *System Control Register* (SCTLR)
 #[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
 pub struct Sctlr(u32);
 
 impl Sctlr {
@@ -47,8 +48,8 @@ impl Sctlr {
         // Safety: Reading this register has no side-effects and is atomic
         #[cfg(target_arch = "arm")]
         unsafe {
-            core::arch::asm!("mrc p15, 0, {}, c1, c0, 0", out(reg) r, options(nomem, nostack, preserves_flags))
-        };
+            core::arch::asm!("mrc p15, 0, {}, c1, c0, 0", out(reg) r, options(nomem, nostack, preserves_flags));
+        }
         #[cfg(not(target_arch = "arm"))]
         {
             r = 0;
@@ -62,7 +63,7 @@ impl Sctlr {
         // Safety: Writing this register is atomic
         #[cfg(target_arch = "arm")]
         unsafe {
-            core::arch::asm!("mcr p15, 0, {}, c1, c0, 0", in(reg) _value.0, options(nomem, nostack, preserves_flags))
+            core::arch::asm!("mcr p15, 0, {}, c1, c0, 0", in(reg) _value.0, options(nomem, nostack, preserves_flags));
         };
     }
 
