@@ -12,6 +12,18 @@ mod sctlr;
 #[doc(inline)]
 pub use sctlr::Sctlr;
 
+#[cfg(arm_architecture = "v8-r")]
+mod hvbar;
+#[doc(inline)]
+#[cfg(arm_architecture = "v8-r")]
+pub use hvbar::Hvbar;
+
+#[cfg(arm_architecture = "v8-r")]
+mod vbar;
+#[doc(inline)]
+#[cfg(arm_architecture = "v8-r")]
+pub use vbar::Vbar;
+
 // TODO:
 
 // Multiprocessor Affinity Register (MPIDR)
