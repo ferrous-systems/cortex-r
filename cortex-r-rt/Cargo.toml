@@ -10,6 +10,7 @@ rust-version = "1.76"
 version = "0.1.0"
 
 [dependencies]
+arm-semihosting = { version = "0.1.0", path = "../arm-semihosting" }
 
 [features]
 # Enable the FPU on start-up, even on a soft-float EABI target
