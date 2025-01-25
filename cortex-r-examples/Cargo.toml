@@ -10,7 +10,7 @@ rust-version = "1.76"
 version = "0.1.0"
 
 [dependencies]
-cortex-r = { path = "../cortex-r" }
+cortex-r = { path = "../cortex-r", features=["critical-section-single-core"] }
 cortex-r-rt = { path = "../cortex-r-rt" }
 arm-semihosting = { path = "../arm-semihosting" }
 
