@@ -35,5 +35,9 @@ fn main() -> Result<(), core::fmt::Error> {
 /// This is our SVC exception handler
 #[no_mangle]
 unsafe extern "C" fn _svc_handler(arg: u32, state: *const [u32; 6]) {
-    hprintln!("SVC interrupt, with arg={:#06x}, state={:08x?}", arg, state.read());
+    hprintln!(
+        "SVC interrupt, with arg={:#06x}, state={:08x?}",
+        arg,
+        state.read()
+    );
 }

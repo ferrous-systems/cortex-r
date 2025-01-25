@@ -10,7 +10,7 @@ pub mod register;
 pub mod interrupt;
 
 /// Generate an SVC call with the given argument
-/// 
+///
 /// Safe to call in Supervisor mode because it pushes LR and SPSR to the stack
 /// before the call, and restores them afterwards.
 #[macro_export]
@@ -38,7 +38,7 @@ macro_rules! svc {
 }
 
 /// Generate an SVC call with the given argument
-/// 
+///
 /// Only works in User mode. Do not call in Supervisor mode (the default mode)
 /// because it will trash your LR and processor status.
 #[macro_export]
