@@ -26,5 +26,5 @@ fn main() -> Result<(), core::fmt::Error> {
     let x = 1.0f64;
     let y = x * 2.0;
     hprintln!("Hello, this is semihosting! x = {:0.3}, y = {:0.3}", x, y);
-    panic!("I am a panic");
+    panic!("I am an example panic");
 }
