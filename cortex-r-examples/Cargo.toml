@@ -8,6 +8,7 @@ readme = "README.md"
 repository = "https://github.com/ferrous-systems/cortex-r.git"
 rust-version = "1.76"
 version = "0.1.0"
+default-run = "hello"
 
 [dependencies]
 cortex-r = { path = "../cortex-r", features=["critical-section-single-core"] }
