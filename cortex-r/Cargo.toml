@@ -10,4 +10,12 @@ rust-version = "1.76"
 version = "0.1.0"
 
 [dependencies]
-critical-section = { version = "1.2.0", features = ["restore-state-bool"] }
+critical-section = { version = "1.2.0", features = ["restore-state-bool"], optional = true }
+defmt = { version = "0.3", optional = true }
+
+[features]
+# Adds a critical-section implementation that only disables interrupts.
+# This is not sound on multi-core systems because interrupts are per-core.
+critical-section-single-core = ["critical-section"]
+# Adds defmt::Format implementation for the register types
+defmt = ["dep:defmt"]
