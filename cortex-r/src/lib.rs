@@ -9,6 +9,8 @@ pub mod register;
 
 pub mod interrupt;
 
+pub mod asm;
+
 /// Generate an SVC call with the given argument
 ///
 /// Safe to call in Supervisor mode because it pushes LR and SPSR to the stack
