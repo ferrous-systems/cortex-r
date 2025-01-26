@@ -13,6 +13,12 @@ mod sctlr;
 pub use sctlr::Sctlr;
 
 #[cfg(arm_architecture = "v8-r")]
+mod hactlr;
+#[doc(inline)]
+#[cfg(arm_architecture = "v8-r")]
+pub use hactlr::Hactlr;
+
+#[cfg(arm_architecture = "v8-r")]
 mod hvbar;
 #[doc(inline)]
 #[cfg(arm_architecture = "v8-r")]
