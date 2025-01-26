@@ -261,6 +261,7 @@ core::arch::global_asm!(
     // `extern "C" fn irq_handler();`
     .global _asm_irq_handler
     _asm_irq_handler:
+        sub     lr, lr, 4
         srsfd   sp!, {irq_mode}
     "#,
     save_context!(),
