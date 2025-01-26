@@ -9,7 +9,8 @@ critical_section::set_impl!(SingleCoreCriticalSection);
 
 unsafe impl critical_section::Impl for SingleCoreCriticalSection {
     unsafe fn acquire() -> critical_section::RawRestoreState {
-        let was_active = crate::register::Cpsr::read().i();
+        // the i bit means "masked"
+        let was_active = !crate::register::Cpsr::read().i();
         crate::interrupt::disable();
         atomic::compiler_fence(atomic::Ordering::SeqCst);
         was_active
