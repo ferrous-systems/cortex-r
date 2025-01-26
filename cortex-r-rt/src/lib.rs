@@ -225,7 +225,7 @@ macro_rules! restore_context {
     };
 }
 
-// Our assembly language exception handlers when we don't have an FPU
+// Our assembly language exception handlers
 #[cfg(any(arm_architecture = "v7-r", arm_architecture = "v8-r"))]
 core::arch::global_asm!(
     r#"
@@ -239,11 +239,12 @@ core::arch::global_asm!(
     // `extern "C" fn svc_handler(svc: u32, context: *const u32);`
     .global _asm_svc_handler
     _asm_svc_handler:
-        srsfd   sp!, #0x13
+        srsfd   sp!, {svc_mode}
     "#,
     save_context!(),
     r#"
-        tst      r0, #0x20                // Occurred in Thumb state?
+        mrs      r0, cpsr                 // Load processor status
+        tst      r0, {t_bit}              // Occurred in Thumb state?
         ldrhne   r0, [lr,#-2]             // Yes: Load halfword and...
         bicne    r0, r0, #0xFF00          // ...extract comment field
         ldreq    r0, [lr,#-4]             // No: Load word and...
@@ -260,7 +261,7 @@ core::arch::global_asm!(
     // `extern "C" fn irq_handler();`
     .global _asm_irq_handler
     _asm_irq_handler:
-        srsfd   sp!, #0x12
+        srsfd   sp!, {irq_mode}
     "#,
     save_context!(),
     r#"
@@ -270,9 +271,13 @@ core::arch::global_asm!(
     restore_context!(),
     r#"
         rfefd   sp!
-    "#
+    "#,
+    svc_mode = const cortex_r::register::Cpsr::SVC_MODE,
+    irq_mode = const cortex_r::register::Cpsr::IRQ_MODE,
+    t_bit = const cortex_r::register::Cpsr::T_BIT,
 );
 
+/// This macro expands to code to turn on the FPU
 #[cfg(all(
     any(arm_architecture = "v7-r", arm_architecture = "v8-r"),
     any(target_abi = "eabihf", feature = "eabi-fpu")
@@ -291,6 +296,7 @@ macro_rules! fpu_enable {
     };
 }
 
+/// This macro expands to code that does nothing because there is no FPU
 #[cfg(all(
     any(arm_architecture = "v7-r", arm_architecture = "v8-r"),
     not(any(target_abi = "eabihf", feature = "eabi-fpu"))
@@ -317,22 +323,22 @@ core::arch::global_asm!(
     _el1_start:
         // Set stack pointer (as the top) and mask interrupts for for FIQ mode (Mode 0x11)
         ldr     r0, =_stack_top
-        msr     cpsr, #0xD1
+        msr     cpsr, {fiq_mode}
         mov     sp, r0
         ldr     r1, =_fiq_stack_size
         sub     r0, r0, r1
         // Set stack pointer (right after) and mask interrupts for for IRQ mode (Mode 0x12)
-        msr     cpsr, #0xD2
+        msr     cpsr, {irq_mode}
         mov     sp, r0
         ldr     r1, =_irq_stack_size
         sub     r0, r0, r1
         // Set stack pointer (right after) and mask interrupts for for SVC mode (Mode 0x13)
-        msr     cpsr, #0xD3
+        msr     cpsr, {svc_mode}
         mov     sp, r0
         ldr     r1, =_svc_stack_size
         sub     r0, r0, r1
         // Set stack pointer (right after) and mask interrupts for for System mode (Mode 0x1F)
-        msr     cpsr, #0xDF
+        msr     cpsr, {sys_mode}
         mov     sp, r0
     "#,
     fpu_enable!(),
@@ -362,7 +368,11 @@ core::arch::global_asm!(
         bl      kmain
         // In case the application returns, loop forever
         b       .
-    "#
+    "#,
+    fiq_mode = const cortex_r::register::Cpsr::FIQ_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
+    irq_mode = const cortex_r::register::Cpsr::IRQ_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
+    svc_mode = const cortex_r::register::Cpsr::SVC_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
+    sys_mode = const cortex_r::register::Cpsr::SYS_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
 );
 
 // Start-up code for Armv7-R.
@@ -396,8 +406,8 @@ core::arch::global_asm!(
     _default_start:
         // Are we in EL2? If not, skip the EL2 setup portion
         mrs     r0, cpsr
-        and     r0, r0, #0x1f
-        cmp     r0, #0x1a
+        and     r0, r0, {cpsr_mode_mask}
+        cmp     r0, {cpsr_mode_hyp}
         bne     1f
         // Set stack pointer
         ldr     sp, =_stack_top
@@ -424,5 +434,7 @@ core::arch::global_asm!(
         mcr     p15, 0, r0, c12, c0, 0
         // go do the rest of the EL1 init
         ldr     pc, =_el1_start
-    "#
+    "#,
+    cpsr_mode_mask = const cortex_r::register::Cpsr::MODE_BITS,
+    cpsr_mode_hyp = const cortex_r::register::Cpsr::HYP_MODE,
 );
