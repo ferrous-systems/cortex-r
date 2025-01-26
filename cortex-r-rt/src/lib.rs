@@ -100,7 +100,6 @@ pub extern "C" fn _default_handler() {
 core::arch::global_asm!(
     r#"
     .section .vector_table
-    .code 32
     .align 0
 
     .global _vector_table
@@ -231,7 +230,6 @@ macro_rules! restore_context {
 core::arch::global_asm!(
     r#"
     .section .text.handlers
-    .code 32
     // Work around https://github.com/rust-lang/rust/issues/127269
     .fpu vfp3-d16
     .align 0
@@ -312,7 +310,6 @@ macro_rules! fpu_enable {
 core::arch::global_asm!(
     r#"
     .section .text.startup
-    .code 32
     .align 0
     // Work around https://github.com/rust-lang/rust/issues/127269
     .fpu vfp3-d16
@@ -375,7 +372,6 @@ core::arch::global_asm!(
 core::arch::global_asm!(
     r#"
     .section .text.startup
-    .code 32
     .align 0
 
     .global _default_start
@@ -394,7 +390,6 @@ core::arch::global_asm!(
 core::arch::global_asm!(
     r#"
     .section .text.startup
-    .code 32
     .align 0
     
     .global _default_start
