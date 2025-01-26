@@ -1,5 +1,7 @@
 //! Interrupts on Arm Cortex-R
 
+use core::sync::atomic::{compiler_fence, Ordering};
+
 /// Enable interrupts
 ///
 /// * Doesn't work in User mode.
@@ -10,11 +12,13 @@
 /// Do not call this function inside an interrupt-based critical section
 #[inline]
 pub unsafe fn enable() {
+    // Ensure no preceeding memory accesses are reordered to after interrupts are enabled.
+    compiler_fence(Ordering::SeqCst);
     // Safety: We're atomically setting a bit in a special register, and we're
     // in an unsafe function that places restrictions on when you can call it
     #[cfg(target_arch = "arm")]
     unsafe {
-        core::arch::asm!("cpsie i", options(nomem, nostack, preserves_flags));
+        core::arch::asm!("dsb", "cpsie i", options(nomem, nostack, preserves_flags));
     };
 }
 
@@ -27,8 +31,10 @@ pub fn disable() {
     // Safety: We're atomically clearing a bit in a special register
     #[cfg(target_arch = "arm")]
     unsafe {
-        core::arch::asm!("cpsid i", options(nomem, nostack, preserves_flags));
+        core::arch::asm!("cpsid i", "dsb", options(nomem, nostack, preserves_flags));
     };
+    // Ensure no subsequent memory accesses are reordered to before interrupts are disabled.
+    compiler_fence(Ordering::SeqCst);
 }
 
 /// Run with interrupts disabled
