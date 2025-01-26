@@ -11,6 +11,7 @@ version = "0.1.0"
 
 [dependencies]
 arm-semihosting = { version = "0.1.0", path = "../arm-semihosting" }
+cortex-r = { version = "0.1.0", path = "../cortex-r" }
 
 [features]
 # Enable the FPU on start-up, even on a soft-float EABI target

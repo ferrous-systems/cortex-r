@@ -29,7 +29,25 @@ impl Cpsr {
     /// The bitmask for Thumb state
     pub const T_BIT: u32 = 1 << 5;
     /// The bitmask for Processor Mode
-    pub const MODE_BITS: u32 = 0x1F;
+    pub const MODE_BITS: u32 = 0b11111;
+    /// The bits for User Mode
+    pub const USR_MODE: u32 = 0b10000;
+    /// The bits for FIQ Mode
+    pub const FIQ_MODE: u32 = 0b10001;
+    /// The bits for IRQ Mode
+    pub const IRQ_MODE: u32 = 0b10010;
+    /// The bits for Supervisor Mode
+    pub const SVC_MODE: u32 = 0b10011;
+    /// The bits for Monitor Mode
+    pub const MON_MODE: u32 = 0b10110;
+    /// The bits for Abort Mode
+    pub const ABT_MODE: u32 = 0b10111;
+    /// The bits for Hyp Mode
+    pub const HYP_MODE: u32 = 0b11010;
+    /// The bits for Undefined Mode
+    pub const UND_MODE: u32 = 0b11011;
+    /// The bits for System Mode
+    pub const SYS_MODE: u32 = 0b11111;
 
     /// Reads the *Current Program Status Register*
     #[inline]
