@@ -4,6 +4,8 @@ Basic Cortex-R linker script.
 You must supply a file called `memory.x` which defines the memory regions 'CODE' and 'DATA'.
 
 The stack pointer(s) will be (near) the top of the DATA region by default.
+
+Based upon the linker script from https://github.com/rust-embedded/cortex-m
 */
 
 INCLUDE memory.x
@@ -25,18 +27,48 @@ SECTIONS {
         *(.rodata .rodata*)
     } > CODE
 
-    .data : {
-        *(.data .data*)
-    } > DATA
+    .data : ALIGN(4) {
+        . = ALIGN(4);
+        __sdata = .;
+        *(.data .data.*);
+        . = ALIGN(4);
+    } > DATA AT>CODE
+    /*
+     * Allow sections from user `memory.x` injected using `INSERT AFTER .data` to
+     * use the .data loading mechanism by pushing __edata. Note: do not change
+     * output region or load region in those user sections!
+     */
+    . = ALIGN(4);
+    __edata = .;
 
-    .bss : {
+    /* LMA of .data */
+    __sidata = LOADADDR(.data);
+
+    .bss (NOLOAD) : ALIGN(4) {
+        . = ALIGN(4);
+        __sbss = .;
         *(.bss .bss* COMMON)
+        . = ALIGN(4);
+    } > DATA
+    /*
+     * Allow sections from user `memory.x` injected using `INSERT AFTER .bss` to
+     * use the .bss zeroing mechanism by pushing __ebss. Note: do not change
+     * output region or load region in those user sections!
+     */
+    __ebss = .;
+
+    .uninit (NOLOAD) : ALIGN(4)
+    {
+        . = ALIGN(4);
+        __suninit = .;
+        *(.uninit .uninit.*);
+        . = ALIGN(4);
+        __euninit = .;
     } > DATA
 
     /DISCARD/ : {
         *(.note .note*)
     }
-
 }
 
 /*

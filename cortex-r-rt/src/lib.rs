@@ -31,17 +31,29 @@
 //!   `_default_handler` but you can override it.
 //! * `_asm_fiq_handler` - a naked function to call when a Fast Interrupt
 //!   Request (FIQ) occurs. Our linker script PROVIDEs a default function at
-//!   `_asm_default_fiq_handler` but you can override it. 
+//!   `_asm_default_fiq_handler` but you can override it.
 //! * `_asm_undefined_handler` - a naked function to call when an Undefined
 //!   Exception occurs. Our linker script PROVIDEs a default function at
-//!   `_asm_default_handler` but you can override it. 
+//!   `_asm_default_handler` but you can override it.
 //! * `_asm_prefetch_handler` - a naked function to call when an Prefetch
 //!   Exception occurs. Our linker script PROVIDEs a default function at
-//!   `_asm_default_handler` but you can override it. 
+//!   `_asm_default_handler` but you can override it.
 //! * `_asm_abort_handler` - a naked function to call when an Abort Exception
 //!   occurs. Our linker script PROVIDEs a default function at
-//!   `_asm_default_handler` but you can override it. 
+//!   `_asm_default_handler` but you can override it.
 //! * `kmain` - the `extern "C"` entry point to your application.
+//! * `__sdata` - the start of initialised data in RAM. Must be 4-byte aligned.
+//! * `__edata` - the end of initialised data in RAM. Must be 4-byte aligned.
+//! * `__sidata` - the start of the initialisation values for data, in read-only
+//!   memory. Must be 4-byte aligned.
+//! * `__sbss` - the start of zero-initialised data in RAM. Must be 4-byte
+//!   aligned.
+//! * `__ebss` - the end of zero-initialised data in RAM. Must be 4-byte
+//!   aligned.
+//!
+//! On start-up, the memory between `__sbss` and `__ebss` is zeroed, and the
+//! memory between `__sdata` and `__edata` is initialised with the data found at
+//! `__sidata`.
 //!
 //! This library produces global symbols called:
 //!
@@ -66,6 +78,10 @@
 //! performance-sensitive, we don't supply an FIQ trampoline; if you want to use
 //! FIQ, you have to write your own assembly routine, allowing you to preserve
 //! only whatever state is important to you.
+//!
+//! If our start-up routine doesn't work for you (e.g. if you have to initialise
+//! your memory controller before you touch RAM), supply your own `_start`
+//! function (but feel free to call our `_default_start` as part of it).
 
 #![no_std]
 
@@ -324,6 +340,27 @@ core::arch::global_asm!(
     "#,
     fpu_enable!(),
     r#"
+        // Initialise .bss
+        ldr     r0, =__sbss
+        ldr     r1, =__ebss
+        mov     r2, 0
+    0:
+        cmp     r1, r0
+        beq     1f
+        stm     r0!, {{r2}}
+        b       0b
+    1:
+        // Initialise .data
+        ldr     r0, =__sdata
+        ldr     r1, =__edata
+        ldr     r2, =__sidata
+    0:
+        cmp     r1, r0
+        beq     1f
+        ldm     r2!, {{r3}}
+        stm     r0!, {{r3}}
+        b       0b
+    1:
         // Jump to application
         bl      kmain
         // In case the application returns, loop forever
@@ -344,9 +381,10 @@ core::arch::global_asm!(
     .global _default_start
     _default_start:
         ldr     pc, =_el1_start
-    "#);
+    "#
+);
 
-    // Start-up code for Armv8-R.
+// Start-up code for Armv8-R.
 //
 // There's only one Armv8-R CPU (the Cortex-R52) and the FPU is mandatory, so we
 // always enable it.
