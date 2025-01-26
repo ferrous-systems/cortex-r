@@ -2,7 +2,8 @@
 
 /// Enable interrupts
 ///
-/// Doesn't work in User mode
+/// * Doesn't work in User mode.
+/// * Doesn't enable FIQ.
 ///
 /// # Safety
 ///
@@ -17,9 +18,10 @@ pub unsafe fn enable() {
     };
 }
 
-/// Disable interrupts
+/// Disable IRQ
 ///
-/// Doesn't work in User mode
+/// * Doesn't work in User mode.
+/// * Doesn't disable FIQ.
 #[inline]
 pub fn disable() {
     // Safety: We're atomically clearing a bit in a special register
@@ -31,7 +33,8 @@ pub fn disable() {
 
 /// Run with interrupts disabled
 ///
-/// Doesn't work in User mode
+/// * Doesn't work in User mode.
+/// * Doesn't disable FIQ.
 #[inline]
 pub fn free<F, T>(f: F) -> T
 where
