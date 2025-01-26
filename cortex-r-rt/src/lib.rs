@@ -416,11 +416,11 @@ core::arch::global_asm!(
         mcr     p15, 4, r0, c12, c0, 0
         // Configure HACTLR to let us enter EL1
         mrc     p15, 4, r0, c1, c0, 1
-        orr     r0, r0, #0x7700
-        orr     r0, r0, #0x0083
+        mov     r1, {hactlr_bits}
+        orr     r0, r0, r1
         mcr     p15, 4, r0, c1, c0, 1
         // Program the SPSR - enter sytem mode (0x1F) in Arm mode with IRQ, FIQ masked
-        mov		r0, #0xDF
+        mov		r0, {sys_mode}
         msr		spsr_hyp, r0
         adr		r0, 1f
         msr		elr_hyp, r0
@@ -437,4 +437,6 @@ core::arch::global_asm!(
     "#,
     cpsr_mode_mask = const cortex_r::register::Cpsr::MODE_BITS,
     cpsr_mode_hyp = const cortex_r::register::Cpsr::HYP_MODE,
+    hactlr_bits = const cortex_r::register::Hactlr::CPUACTLR_BIT | cortex_r::register::Hactlr::CDBGDCI_BIT | cortex_r::register::Hactlr::FLASHIFREGIONR_BIT | cortex_r::register::Hactlr::PERIPHPREGIONR_BIT | cortex_r::register::Hactlr::QOSR_BIT | cortex_r::register::Hactlr::BUSTIMEOUTR_BIT | cortex_r::register::Hactlr::INTMONR_BIT | cortex_r::register::Hactlr::ERR_BIT | cortex_r::register::Hactlr::TESTR1_BIT,
+    sys_mode = const cortex_r::register::Cpsr::SYS_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
 );
