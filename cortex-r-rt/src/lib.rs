@@ -1,4 +1,71 @@
 //! Run-time support for Arm Cortex-R
+//!
+//! This library implements a simple Arm vector table, suitable for getting into
+//! a Rust application running in System Mode.
+//!
+//! Transferring from System Mode to User Mode (i.e. implementing an RTOS) is
+//! not handled here.
+//!
+//! If your processor starts in Hyp mode, this runtime will be transfer it to
+//! System mode. If you wish to write a hypervisor, you will need to replace
+//! this library with something more advanced.
+//!
+//! We assume the following global symbols exist:
+//!
+//! * `__start` - a Reset handler. Our linker script PROVIDEs a default function
+//!   at `_default_start` but you can override it.
+//! * `_stack_top` - the address of the top of some region of RAM that we can
+//!   use as stack space, with eight-byte alignment. Our linker script PROVIDEs
+//!   a default pointing at the top of RAM.
+//! * `_fiq_stack_size` - the number of bytes to be reserved for stack space
+//!   when in FIQ mode; must be a multiple of 8.
+//! * `_irq_stack_size` - the number of bytes to be reserved for stack space
+//!   when in FIQ mode; must be a multiple of 8.
+//! * `_svc_stack_size` - the number of bytes to be reserved for stack space
+//!   when in SVC mode; must be a multiple of 8.F
+//! * `_svc_handler` - an `extern "C"` function to call when an SVC Exception
+//!   occurs. Our linker script PROVIDEs a default function at
+//!   `_default_handler` but you can override it.
+//! * `_irq_handler` - an `extern "C"` function to call when an Interrupt
+//!   occurs. Our linker script PROVIDEs a default function at
+//!   `_default_handler` but you can override it.
+//! * `_asm_fiq_handler` - a naked function to call when a Fast Interrupt
+//!   Request (FIQ) occurs. Our linker script PROVIDEs a default function at
+//!   `_asm_default_fiq_handler` but you can override it. 
+//! * `_asm_undefined_handler` - a naked function to call when an Undefined
+//!   Exception occurs. Our linker script PROVIDEs a default function at
+//!   `_asm_default_handler` but you can override it. 
+//! * `_asm_prefetch_handler` - a naked function to call when an Prefetch
+//!   Exception occurs. Our linker script PROVIDEs a default function at
+//!   `_asm_default_handler` but you can override it. 
+//! * `_asm_abort_handler` - a naked function to call when an Abort Exception
+//!   occurs. Our linker script PROVIDEs a default function at
+//!   `_asm_default_handler` but you can override it. 
+//! * `kmain` - the `extern "C"` entry point to your application.
+//!
+//! This library produces global symbols called:
+//!
+//! * `_vector_table` - the start of the interrupt vector table
+//! * `_default_start` - the default Reset handler, that sets up some stacks and
+//!   calls an `extern "C"` function called `kmain`.
+//! * `_asm_default_fiq_handler` - an FIQ handler that just spins
+//! * `_asm_default_handler` - an exception handler that just spins
+//! * `_asm_svc_handler` - assembly language trampoline for SVC Exceptions that
+//!   calls `_svc_handler`
+//! * `_asm_irq_handler` - assembly language trampoline for Interrupts that
+//!   calls `_irq_handler`
+//!
+//! The assembly language trampolines are required because Armv7-R (and Armv8-R)
+//! processors do not save a great deal of state on entry to an exception
+//! handler, unlike Armv7-M (and other M-Profile) processors. We must therefore
+//! save this state to the stack using assembly language, before transferring to
+//! an `extern "C"` function. We do not change modes before entering that
+//! `extern "C"` function - that's for the handler to deal with as it wishes. We
+//! supply a default handler that prints an error message to Semihosting so you
+//! know if you hit an unexpected exception. Because FIQ is often
+//! performance-sensitive, we don't supply an FIQ trampoline; if you want to use
+//! FIQ, you have to write your own assembly routine, allowing you to preserve
+//! only whatever state is important to you.
 
 #![no_std]
 
@@ -16,18 +83,18 @@ pub extern "C" fn _default_handler() {
 #[cfg(any(arm_architecture = "v7-r", arm_architecture = "v8-r"))]
 core::arch::global_asm!(
     r#"
-.section .vector_table
-.code 32
-.align 0
+    .section .vector_table
+    .code 32
+    .align 0
 
     .global _vector_table
-_vector_table:
+    _vector_table:
         ldr     pc, =_start
         ldr     pc, =_asm_undefined_handler
         ldr     pc, =_asm_svc_handler
         ldr     pc, =_asm_prefetch_handler
         ldr     pc, =_asm_abort_handler
-    nop
+        nop
         ldr     pc, =_asm_irq_handler
         ldr     pc, =_asm_fiq_handler
 
@@ -40,7 +107,7 @@ _vector_table:
     .global _asm_default_handler
     _asm_default_handler:
         b       _asm_default_handler
-"#
+    "#
 );
 
 /// This macro expands to code for saving context on entry to an exception
@@ -147,49 +214,49 @@ macro_rules! restore_context {
 #[cfg(any(arm_architecture = "v7-r", arm_architecture = "v8-r"))]
 core::arch::global_asm!(
     r#"
-.section .text.handlers
-.code 32
+    .section .text.handlers
+    .code 32
     // Work around https://github.com/rust-lang/rust/issues/127269
     .fpu vfp3-d16
-.align 0
+    .align 0
 
-// Called from the vector table when we have an software interrupt.
+    // Called from the vector table when we have an software interrupt.
     // Saves state and calls a C-compatible handler like
     // `extern "C" fn svc_handler(svc: u32, context: *const u32);`
-.global _asm_svc_handler
-_asm_svc_handler:
+    .global _asm_svc_handler
+    _asm_svc_handler:
         srsfd   sp!, #0x13
     "#,
     save_context!(),
     r#"
-    tst      r0, #0x20                // Occurred in Thumb state?
-    ldrhne   r0, [lr,#-2]             // Yes: Load halfword and...
-    bicne    r0, r0, #0xFF00          // ...extract comment field
-    ldreq    r0, [lr,#-4]             // No: Load word and...
-    biceq    r0, r0, #0xFF000000      // ...extract comment field
-    // r0 now contains SVC number
-    bl       _svc_handler
+        tst      r0, #0x20                // Occurred in Thumb state?
+        ldrhne   r0, [lr,#-2]             // Yes: Load halfword and...
+        bicne    r0, r0, #0xFF00          // ...extract comment field
+        ldreq    r0, [lr,#-4]             // No: Load word and...
+        biceq    r0, r0, #0xFF000000      // ...extract comment field
+        // r0 now contains SVC number
+        bl       _svc_handler
     "#,
     restore_context!(),
     r#"
         rfefd   sp!
 
-// Called from the vector table when we have an interrupt.
+    // Called from the vector table when we have an interrupt.
     // Saves state and calls a C-compatible handler like
     // `extern "C" fn irq_handler();`
-.global _asm_irq_handler
-_asm_irq_handler:
+    .global _asm_irq_handler
+    _asm_irq_handler:
         srsfd   sp!, #0x12
     "#,
     save_context!(),
     r#"
-    // call C handler
+        // call C handler
         bl      _irq_handler
     "#,
     restore_context!(),
     r#"
         rfefd   sp!
-"#
+    "#
 );
 
 #[cfg(all(
@@ -199,14 +266,14 @@ _asm_irq_handler:
 macro_rules! fpu_enable {
     () => {
         r#"
-    // Allow VFP coprocessor access
-    mrc     p15, 0, r0, c1, c0, 2
-    orr     r0, r0, #0xF00000
-    mcr     p15, 0, r0, c1, c0, 2
-    // Enable VFP
-    mov     r0, #0x40000000
-    vmsr    fpexc, r0
-"#
+        // Allow VFP coprocessor access
+        mrc     p15, 0, r0, c1, c0, 2
+        orr     r0, r0, #0xF00000
+        mcr     p15, 0, r0, c1, c0, 2
+        // Enable VFP
+        mov     r0, #0x40000000
+        vmsr    fpexc, r0
+        "#
     };
 }
 
@@ -228,9 +295,9 @@ macro_rules! fpu_enable {
 #[cfg(any(arm_architecture = "v7-r", arm_architecture = "v8-r"))]
 core::arch::global_asm!(
     r#"
-.section .text.startup
-.code 32
-.align 0
+    .section .text.startup
+    .code 32
+    .align 0
     // Work around https://github.com/rust-lang/rust/issues/127269
     .fpu vfp3-d16
 
@@ -257,11 +324,11 @@ core::arch::global_asm!(
     "#,
     fpu_enable!(),
     r#"
-    // Jump to application
-    bl      kmain
-    // In case the application returns, loop forever
-    b       .
-"#
+        // Jump to application
+        bl      kmain
+        // In case the application returns, loop forever
+        b       .
+    "#
 );
 
 // Start-up code for Armv7-R.
@@ -288,41 +355,41 @@ core::arch::global_asm!(
 #[cfg(arm_architecture = "v8-r")]
 core::arch::global_asm!(
     r#"
-.section .text.startup
-.code 32
-.align 0
-
+    .section .text.startup
+    .code 32
+    .align 0
+    
     .global _default_start
     _default_start:
-    // Are we in EL2? If not, skip the EL2 setup portion
-    mrs     r0, cpsr
-    and     r0, r0, #0x1f
-    cmp     r0, #0x1a
-    bne     1f
-    // Set stack pointer
-    ldr     sp, =_stack_top
-    // Set the HVBAR (for EL2) to _vector_table
-    ldr     r0, =_vector_table
-    mcr     p15, 4, r0, c12, c0, 0
-    // Configure HACTLR to let us enter EL1
-    mrc     p15, 4, r0, c1, c0, 1
-    orr     r0, r0, #0x7700
-    orr     r0, r0, #0x0083
-    mcr     p15, 4, r0, c1, c0, 1
+        // Are we in EL2? If not, skip the EL2 setup portion
+        mrs     r0, cpsr
+        and     r0, r0, #0x1f
+        cmp     r0, #0x1a
+        bne     1f
+        // Set stack pointer
+        ldr     sp, =_stack_top
+        // Set the HVBAR (for EL2) to _vector_table
+        ldr     r0, =_vector_table
+        mcr     p15, 4, r0, c12, c0, 0
+        // Configure HACTLR to let us enter EL1
+        mrc     p15, 4, r0, c1, c0, 1
+        orr     r0, r0, #0x7700
+        orr     r0, r0, #0x0083
+        mcr     p15, 4, r0, c1, c0, 1
         // Program the SPSR - enter sytem mode (0x1F) in Arm mode with IRQ, FIQ masked
         mov		r0, #0xDF
-	msr		spsr_hyp, r0
-	adr		r0, 1f
-	msr		elr_hyp, r0
-	dsb
-	isb
-	eret
-1:
+        msr		spsr_hyp, r0
+        adr		r0, 1f
+        msr		elr_hyp, r0
+        dsb
+        isb
+        eret
+    1:
         // Set the VBAR (for EL1) to _vector_table. NB: This isn't required on
         // Armv7-R because that only supports 'low' (default) or 'high'.
-    ldr     r0, =_vector_table
-    mcr     p15, 0, r0, c12, c0, 0
+        ldr     r0, =_vector_table
+        mcr     p15, 0, r0, c12, c0, 0
         // go do the rest of the EL1 init
         ldr     pc, =_el1_start
-"#
+    "#
 );
