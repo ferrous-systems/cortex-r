@@ -352,6 +352,10 @@ core::arch::global_asm!(
         // Set stack pointer (right after) and mask interrupts for for System mode (Mode 0x1F)
         msr     cpsr, {sys_mode}
         mov     sp, r0
+        // Clear the Thumb Exception bit because we're in Arm mode
+        mrc     p15, 0, r0, c1, c0, 0
+        bic     r0, #{te_bit}
+        mcr     p15, 0, r0, c1, c0, 0
     "#,
     fpu_enable!(),
     r#"
@@ -386,6 +390,7 @@ core::arch::global_asm!(
     irq_mode = const cortex_r::register::Cpsr::IRQ_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
     svc_mode = const cortex_r::register::Cpsr::SVC_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
     sys_mode = const cortex_r::register::Cpsr::SYS_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
+    te_bit = const cortex_r::register::Sctlr::TE_BIT
 );
 
 // Start-up code for Armv7-R.
