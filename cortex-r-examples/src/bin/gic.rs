@@ -7,6 +7,10 @@
 use cortex_r as _;
 use cortex_r_examples as _;
 
+use arm_gic::{
+    gicv3::{GicV3, Group, SgiTarget},
+    IntId,
+};
 use arm_semihosting::{debug, hprintln};
 
 /// The entry-point to the Rust application.
@@ -19,11 +23,6 @@ pub extern "C" fn kmain() {
     }
     debug::exit(debug::EXIT_SUCCESS);
 }
-
-use arm_gic::{
-    gicv3::{GicV3, Group, SecureIntGroup, SgiTarget},
-    IntId,
-};
 
 // Base addresses of the GICv3 distributor and redistributor.
 const GICD_BASE_ADDRESS: *mut u64 = 0xF000_0000usize as _;
