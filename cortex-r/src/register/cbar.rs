@@ -22,7 +22,7 @@ impl Cbar {
 
     /// Get the periphbase address
     pub fn periphbase(self) -> *mut u64 {
-        (self.0 & 0xFFFFF) as *mut u64
+        (self.0 & 0xFFF00000) as *mut u64
     }
 }
 

@@ -11,7 +11,7 @@ use arm_gic::{
     gicv3::{GicV3, Group, SgiTarget},
     IntId,
 };
-use arm_semihosting::{debug, heprintln, hprintln};
+use arm_semihosting::{debug, hprintln};
 
 /// The entry-point to the Rust application.
 ///
@@ -40,13 +40,8 @@ fn dump_cpsr() {
 /// Called by [`kmain`].
 fn main() -> Result<(), core::fmt::Error> {
     // Get the GIC address by reading CBAR
-    let mut periphbase = cortex_r::register::Cbar::read().periphbase();
-    if periphbase.is_null() {
-        heprintln!("WARNING: CBAR is null - assuming 0xF000_0000 instead!");
-        // this is probably wrong - let's swap it for the QEMU default value as
-        // QEMU 9.1 returns NULL
-        periphbase = 0xF000_0000 as *mut u64;
-    }
+    let periphbase = cortex_r::register::Cbar::read().periphbase();
+    hprintln!("Found PERIPHBASE {:p}", periphbase);
     let gicd_base = periphbase.wrapping_byte_add(GICD_BASE_OFFSET);
     let gicr_base = periphbase.wrapping_byte_add(GICR_BASE_OFFSET);
     // Initialise the GIC.
