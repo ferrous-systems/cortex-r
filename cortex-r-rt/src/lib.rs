@@ -3,8 +3,8 @@
 #![no_std]
 
 #[cfg(all(
-    any(cmr_architecture = "v7-r", cmr_architecture = "v8-r"),
-    any(cmr_abi = "hard-float", feature = "eabi-fpu")
+    any(arm_architecture = "v7-r", arm_architecture = "v8-r"),
+    any(arm_float_abi = "hard", feature = "eabi-fpu")
 ))]
 core::arch::global_asm!(
     r#"
@@ -35,8 +35,8 @@ _start:
 );
 
 #[cfg(all(
-    any(cmr_architecture = "v7-r", cmr_architecture = "v8-r"),
-    not(any(cmr_abi = "hard-float", feature = "eabi-fpu"))
+    any(arm_architecture = "v7-r", arm_architecture = "v8-r"),
+    not(any(arm_float_abi = "hard", feature = "eabi-fpu"))
 ))]
 core::arch::global_asm!(
     r#"

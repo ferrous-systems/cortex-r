@@ -3,20 +3,11 @@
 runner = "qemu-system-arm -machine mps3-an536 -cpu cortex-r52 -semihosting -nographic -kernel"
 
 [target.armv7r-none-eabihf]
-# This CPU is almost 100% Armv7-R compatible. Note: if we can find a machine
-# that supports Cortex-R5, but has an CMSDK UART at the same address at the
-# MPS3-AN536, we could use that instead.
-#
-# Note, this requires QEMU 9 or higher.
-runner = "qemu-system-arm -machine mps3-an536 -cpu cortex-r52 -semihosting -nographic -kernel"
+runner = "qemu-system-arm -machine versatileab -cpu cortex-r5f -semihosting -nographic -kernel"
 
 [target.armv7r-none-eabi]
-# This CPU is almost 100% Armv7-R compatible. Note: if we can find a machine
-# that supports Cortex-R5, but has an CMSDK UART at the same address at the
-# MPS3-AN536, we could use that instead.
-#
-# Note, this requires QEMU 9 or higher.
-runner = "qemu-system-arm -machine mps3-an536 -cpu cortex-r52 -semihosting -nographic -kernel"
+# change to cortex-r5f if you use eabi-fpu feature
+runner = "qemu-system-arm -machine versatileab -cpu cortex-r5 -semihosting -nographic -kernel"
 
 [build]
 target = ["armv7r-none-eabihf"]

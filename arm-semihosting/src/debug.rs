@@ -9,7 +9,7 @@
 //! Target program:
 //!
 //! ```no_run
-//! use cortex_r_semihosting::debug::{self, EXIT_SUCCESS, EXIT_FAILURE};
+//! use arm_semihosting::debug::{self, EXIT_SUCCESS, EXIT_FAILURE};
 //!
 //! if 2 == 2 {
 //!     // report success
