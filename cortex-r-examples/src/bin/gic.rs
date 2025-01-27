@@ -11,7 +11,7 @@ use arm_gic::{
     gicv3::{GicV3, Group, SgiTarget},
     IntId,
 };
-use arm_semihosting::{debug, hprintln};
+use arm_semihosting::{debug, heprintln, hprintln};
 
 /// The entry-point to the Rust application.
 ///
@@ -24,9 +24,11 @@ pub extern "C" fn kmain() {
     debug::exit(debug::EXIT_SUCCESS);
 }
 
-// Base addresses of the GICv3 distributor and redistributor.
-const GICD_BASE_ADDRESS: *mut u64 = 0xF000_0000usize as _;
-const GICR_BASE_ADDRESS: *mut u64 = 0xF010_0000usize as _;
+/// Offset from PERIPHBASE for GIC Distributor
+const GICD_BASE_OFFSET: usize = 0x0000_0000usize;
+
+/// Offset from PERIPHBASE for the first GIC Redistributor
+const GICR_BASE_OFFSET: usize = 0x0010_0000usize;
 
 fn dump_cpsr() {
     let cpsr = cortex_r::register::Cpsr::read();
@@ -37,9 +39,19 @@ fn dump_cpsr() {
 ///
 /// Called by [`kmain`].
 fn main() -> Result<(), core::fmt::Error> {
+    // Get the GIC address by reading CBAR
+    let mut periphbase = cortex_r::register::Cbar::read().periphbase();
+    if periphbase.is_null() {
+        heprintln!("WARNING: CBAR is null - assuming 0xF000_0000 instead!");
+        // this is probably wrong - let's swap it for the QEMU default value as
+        // QEMU 9.1 returns NULL
+        periphbase = 0xF000_0000 as *mut u64;
+    }
+    let gicd_base = periphbase.wrapping_byte_add(GICD_BASE_OFFSET);
+    let gicr_base = periphbase.wrapping_byte_add(GICR_BASE_OFFSET);
     // Initialise the GIC.
-    hprintln!("Creating GIC driver...");
-    let mut gic = unsafe { GicV3::new(GICD_BASE_ADDRESS, GICR_BASE_ADDRESS) };
+    hprintln!("Creating GIC driver @ {:p} / {:p}", gicd_base, gicr_base);
+    let mut gic = unsafe { GicV3::new(gicd_base, gicr_base) };
     hprintln!("Calling git.setup()");
     gic.setup();
     hprintln!("Configure SGI");
