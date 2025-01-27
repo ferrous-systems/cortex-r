@@ -36,4 +36,8 @@ fn main() -> Result<(), core::fmt::Error> {
 #[no_mangle]
 unsafe extern "C" fn _svc_handler(arg: u32) {
     hprintln!("In _svc_handler, with arg={:#06x}", arg,);
+    if arg == 0xABCDEF {
+        // test nested SVC calls
+        cortex_r::svc!(0x456789);
+    }
 }

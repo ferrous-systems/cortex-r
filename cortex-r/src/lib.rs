@@ -11,43 +11,15 @@ pub mod interrupt;
 
 pub mod asm;
 
-/// Generate an SVC call with the given argument
+/// Generate an SVC call with the given argument.
 ///
-/// Safe to call in Supervisor mode because it pushes LR and SPSR to the stack
-/// before the call, and restores them afterwards.
+/// Safe to call even in Supervisor (Svc) mode, as long as your Svc handler
+/// saves and restores SPSR_svc correctly.
 #[macro_export]
 macro_rules! svc {
     ($r0:expr) => {
         unsafe {
-            core::arch::asm!(r#"
-                // save lr
-                push    {{lr}}
-                // Get spsr
-                mrs     lr, spsr           
-                // save spsr
-                push    {{lr}}                                    
-                // call software interrupt
-                svc {}                     
-                // Get spsr from stack
-                pop     {{lr}}          
-                // Restore spsr
-                msr     spsr, lr      
-                // restore
-                pop     {{lr}}          
-            "#, const $r0);
-        }
-    }
-}
-
-/// Generate an SVC call with the given argument
-///
-/// Only works in User mode. Do not call in Supervisor mode (the default mode)
-/// because it will trash your LR and processor status.
-#[macro_export]
-macro_rules! user_svc {
-    ($r0:expr) => {
-        unsafe {
-            core::arch::asm!("svc {}", const $r0);
+            core::arch::asm!("svc {arg}", arg = const $r0, out("lr") _);
         }
     }
 }
