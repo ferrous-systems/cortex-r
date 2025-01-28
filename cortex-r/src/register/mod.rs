@@ -1,5 +1,9 @@
 //! Access registers in Armv7-R and Armv8-R
 
+mod cbar;
+#[doc(inline)]
+pub use cbar::Cbar;
+
 mod cpsr;
 #[doc(inline)]
 pub use cpsr::Cpsr;

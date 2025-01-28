@@ -6,40 +6,38 @@
 pub struct Sctlr(u32);
 
 impl Sctlr {
-    pub const N_BIT: u32 = 1 << 31;
-
     /// The bitmask for the Instruction Endianness bit
-    const IE_BIT: u32 = 1 << 31;
+    pub const IE_BIT: u32 = 1 << 31;
     /// The bitmask for the Thumb Exception Enable bit
-    const TE_BIT: u32 = 1 << 30;
+    pub const TE_BIT: u32 = 1 << 30;
     /// The bitmask for the Non-Maskable FIQ bit
-    const NMFI_BIT: u32 = 1 << 27;
+    pub const NMFI_BIT: u32 = 1 << 27;
     /// The bitmask for the Exception Endianness bit
-    const EE_BIT: u32 = 1 << 25;
+    pub const EE_BIT: u32 = 1 << 25;
     /// The bitmask for the U bit
-    const U_BIT: u32 = 1 << 22;
+    pub const U_BIT: u32 = 1 << 22;
     /// The bitmask for the Fast Interrupt bit
-    const FI_BIT: u32 = 1 << 21;
+    pub const FI_BIT: u32 = 1 << 21;
     /// The bitmask for the Divide by Zero Fault bit
-    const DZ_BIT: u32 = 1 << 18;
+    pub const DZ_BIT: u32 = 1 << 18;
     /// The bitmask for the Background Region bit
-    const BR_BIT: u32 = 1 << 17;
+    pub const BR_BIT: u32 = 1 << 17;
     /// The bitmask for the Round Robin bit
-    const RR_BIT: u32 = 1 << 14;
+    pub const RR_BIT: u32 = 1 << 14;
     /// The bitmask for the Exception Vector Table bit
-    const V_BIT: u32 = 1 << 13;
+    pub const V_BIT: u32 = 1 << 13;
     /// The bitmask for the Instruction Cache enable bit
-    const I_BIT: u32 = 1 << 12;
+    pub const I_BIT: u32 = 1 << 12;
     /// The bitmask for the Branch Prediction enable bit
-    const Z_BIT: u32 = 1 << 11;
+    pub const Z_BIT: u32 = 1 << 11;
     /// The bitmask for the SWP bit
-    const SW_BIT: u32 = 1 << 10;
+    pub const SW_BIT: u32 = 1 << 10;
     /// The bitmask for the Cache enable bit
-    const C_BIT: u32 = 1 << 2;
+    pub const C_BIT: u32 = 1 << 2;
     /// The bitmask for the Alignment check bit
-    const A_BIT: u32 = 1 << 1;
+    pub const A_BIT: u32 = 1 << 1;
     /// The bitmask for the MPU bit
-    const M_BIT: u32 = 1 << 0;
+    pub const M_BIT: u32 = 1 << 0;
 
     /// Reads the *System Control Register*
     #[inline]

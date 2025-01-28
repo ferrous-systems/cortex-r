@@ -20,6 +20,7 @@ extern "C" {
 pub extern "C" fn kmain() {
     hprintln!("{:?}", cortex_r::register::Midr::read());
     hprintln!("{:?}", cortex_r::register::Cpsr::read());
+    hprintln!("{:?}", cortex_r::register::Cbar::read());
 
     hprintln!("_stack_top: {:p}", core::ptr::addr_of!(_stack_top));
 

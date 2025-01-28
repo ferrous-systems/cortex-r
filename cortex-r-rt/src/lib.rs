@@ -103,6 +103,7 @@ core::arch::global_asm!(
     .align 0
 
     .global _vector_table
+    .type _vector_table, %function
     _vector_table:
         ldr     pc, =_start
         ldr     pc, =_asm_undefined_handler
@@ -112,16 +113,21 @@ core::arch::global_asm!(
         nop
         ldr     pc, =_asm_irq_handler
         ldr     pc, =_asm_fiq_handler
+    .size _vector_table, . - _vector_table
 
     .section .text.handlers
 
     .global _asm_default_fiq_handler
+    .type _asm_default_fiq_handler, %function
     _asm_default_fiq_handler:
         b       _asm_default_fiq_handler
+    .size    _asm_default_fiq_handler, . - _asm_default_fiq_handler
 
     .global _asm_default_handler
+    .type _asm_default_handler, %function
     _asm_default_handler:
         b       _asm_default_handler
+    .size _asm_default_handler, . - _asm_default_handler
     "#
 );
 
@@ -238,6 +244,7 @@ core::arch::global_asm!(
     // Saves state and calls a C-compatible handler like
     // `extern "C" fn svc_handler(svc: u32, context: *const u32);`
     .global _asm_svc_handler
+    .type _asm_svc_handler, %function
     _asm_svc_handler:
         srsfd   sp!, {svc_mode}
     "#,
@@ -255,11 +262,13 @@ core::arch::global_asm!(
     restore_context!(),
     r#"
         rfefd   sp!
+    .size _asm_svc_handler, . - _asm_svc_handler
 
     // Called from the vector table when we have an interrupt.
     // Saves state and calls a C-compatible handler like
     // `extern "C" fn irq_handler();`
     .global _asm_irq_handler
+    .type _asm_irq_handler, %function
     _asm_irq_handler:
         sub     lr, lr, 4
         srsfd   sp!, {irq_mode}
@@ -272,6 +281,7 @@ core::arch::global_asm!(
     restore_context!(),
     r#"
         rfefd   sp!
+    .size _asm_irq_handler, . - _asm_irq_handler
     "#,
     svc_mode = const cortex_r::register::Cpsr::SVC_MODE,
     irq_mode = const cortex_r::register::Cpsr::IRQ_MODE,
@@ -321,6 +331,7 @@ core::arch::global_asm!(
     // Work around https://github.com/rust-lang/rust/issues/127269
     .fpu vfp3-d16
 
+    .type _el1_start, %function
     _el1_start:
         // Set stack pointer (as the top) and mask interrupts for for FIQ mode (Mode 0x11)
         ldr     r0, =_stack_top
@@ -341,6 +352,10 @@ core::arch::global_asm!(
         // Set stack pointer (right after) and mask interrupts for for System mode (Mode 0x1F)
         msr     cpsr, {sys_mode}
         mov     sp, r0
+        // Clear the Thumb Exception bit because we're in Arm mode
+        mrc     p15, 0, r0, c1, c0, 0
+        bic     r0, #{te_bit}
+        mcr     p15, 0, r0, c1, c0, 0
     "#,
     fpu_enable!(),
     r#"
@@ -369,11 +384,13 @@ core::arch::global_asm!(
         bl      kmain
         // In case the application returns, loop forever
         b       .
+    .size _el1_start, . - _el1_start
     "#,
     fiq_mode = const cortex_r::register::Cpsr::FIQ_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
     irq_mode = const cortex_r::register::Cpsr::IRQ_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
     svc_mode = const cortex_r::register::Cpsr::SVC_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
     sys_mode = const cortex_r::register::Cpsr::SYS_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
+    te_bit = const cortex_r::register::Sctlr::TE_BIT
 );
 
 // Start-up code for Armv7-R.
@@ -386,8 +403,10 @@ core::arch::global_asm!(
     .align 0
 
     .global _default_start
+    .type _default_start, %function
     _default_start:
         ldr     pc, =_el1_start
+    .size _default_start, . - _default_start
     "#
 );
 
@@ -404,6 +423,7 @@ core::arch::global_asm!(
     .align 0
     
     .global _default_start
+    .type _default_start, %function
     _default_start:
         // Are we in EL2? If not, skip the EL2 setup portion
         mrs     r0, cpsr
@@ -435,6 +455,7 @@ core::arch::global_asm!(
         mcr     p15, 0, r0, c12, c0, 0
         // go do the rest of the EL1 init
         ldr     pc, =_el1_start
+    .size _default_start, . - _default_start
     "#,
     cpsr_mode_mask = const cortex_r::register::Cpsr::MODE_BITS,
     cpsr_mode_hyp = const cortex_r::register::Cpsr::HYP_MODE,
