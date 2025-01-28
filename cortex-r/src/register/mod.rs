@@ -1,6 +1,8 @@
 //! Access registers in Armv7-R and Armv8-R
 
+#[cfg(arm_architecture = "v8-r")]
 mod cbar;
+#[cfg(arm_architecture = "v8-r")]
 #[doc(inline)]
 pub use cbar::Cbar;
 

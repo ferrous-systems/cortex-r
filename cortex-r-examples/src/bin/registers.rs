@@ -20,6 +20,7 @@ extern "C" {
 pub extern "C" fn kmain() {
     println!("{:?}", cortex_r::register::Midr::read());
     println!("{:?}", cortex_r::register::Cpsr::read());
+    #[cfg(arm_architecture = "v8-r")]
     println!("{:?}", cortex_r::register::Cbar::read());
 
     println!("_stack_top: {:p}", core::ptr::addr_of!(_stack_top));

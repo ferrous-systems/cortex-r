@@ -85,7 +85,10 @@
 
 #![no_std]
 
-use cortex_r::register::{cpsr::ProcessorMode, Cpsr, Hactlr};
+use cortex_r::register::{cpsr::ProcessorMode, Cpsr};
+
+#[cfg(arm_architecture = "v8-r")]
+use cortex_r::register::Hactlr;
 
 /// Our default exception handler.
 ///

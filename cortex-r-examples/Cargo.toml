@@ -16,6 +16,9 @@ cortex-r-rt = { path = "../cortex-r-rt" }
 arm-gic = { git = "https://github.com/google/arm-gic.git", rev="46a8fc1720f5c28fccf4dfb5953b88dab7012e9c", optional = true }
 semihosting = { version = "0.1.18", features = ["stdio"] }
 
+[build-dependencies]
+arm-targets = { version = "0.1.0", path = "../arm-targets" }
+
 [features]
 eabi-fpu = ["cortex-r-rt/eabi-fpu"]
 gic = ["arm-gic"]
