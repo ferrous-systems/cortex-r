@@ -1,5 +1,6 @@
 //! Code for managing the *Current Program Status Register*
 
+/// The current Processor Mode
 #[derive(Debug)]
 #[bitbybit::bitenum(u5, exhaustive = false)]
 pub enum ProcessorMode {
