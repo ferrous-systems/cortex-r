@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust: [stable, 1.76]
+        rust: [stable, 1.82]
         target:
           - armebv7r-none-eabi
           - armebv7r-none-eabihf
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust: [stable, 1.76]
+        rust: [stable, 1.82]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust: [stable, 1.76]
+        rust: [stable, 1.82]
         target:
           - armebv7r-none-eabi
           - armebv7r-none-eabihf
@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust: [stable, 1.76]
+        rust: [stable, 1.82]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -137,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust: [stable, 1.76]
+        rust: [stable, 1.82]
         target:
           - armebv7r-none-eabi
           - armebv7r-none-eabihf
@@ -160,7 +160,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust: [stable, 1.76]
+        rust: [stable, 1.82]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

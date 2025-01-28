@@ -6,10 +6,12 @@ name = "cortex-r-rt"
 description = "Run-time support for Arm Cortex-R"
 readme = "README.md"
 repository = "https://github.com/ferrous-systems/cortex-r.git"
-rust-version = "1.76"
+rust-version = "1.82"
 version = "0.1.0"
 
 [dependencies]
+arm-semihosting = { version = "0.1.0", path = "../arm-semihosting" }
+cortex-r = { version = "0.1.0", path = "../cortex-r" }
 
 [features]
 # Enable the FPU on start-up, even on a soft-float EABI target

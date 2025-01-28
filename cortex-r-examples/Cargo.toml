@@ -6,13 +6,20 @@ name = "cortex-r-examples"
 description = "Examples for Arm Cortex-R"
 readme = "README.md"
 repository = "https://github.com/ferrous-systems/cortex-r.git"
-rust-version = "1.76"
+rust-version = "1.82"
 version = "0.1.0"
+default-run = "hello"
 
 [dependencies]
-cortex-r = { path = "../cortex-r" }
+cortex-r = { path = "../cortex-r", features=["critical-section-single-core"] }
 cortex-r-rt = { path = "../cortex-r-rt" }
 arm-semihosting = { path = "../arm-semihosting" }
+arm-gic = { path = "../arm-gic", optional = true }
 
 [features]
 eabi-fpu = ["cortex-r-rt/eabi-fpu"]
+gic = ["arm-gic"]
+
+[[bin]]
+name = "gic"
+required-features = ["gic"]
