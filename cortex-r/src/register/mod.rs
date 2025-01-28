@@ -4,7 +4,7 @@ mod cbar;
 #[doc(inline)]
 pub use cbar::Cbar;
 
-mod cpsr;
+pub mod cpsr;
 #[doc(inline)]
 pub use cpsr::Cpsr;
 
