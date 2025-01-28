@@ -85,7 +85,7 @@
 
 #![no_std]
 
-use cortex_r::register::cpsr::{Cpsr, ProcessorMode};
+use cortex_r::register::{cpsr::ProcessorMode, Cpsr, Hactlr};
 
 /// Our default exception handler.
 ///
@@ -488,7 +488,19 @@ core::arch::global_asm!(
     .size _default_start, . - _default_start
     "#,
     cpsr_mode_hyp = const ProcessorMode::Hyp as u8,
-    hactlr_bits = const cortex_r::register::Hactlr::CPUACTLR_BIT | cortex_r::register::Hactlr::CDBGDCI_BIT | cortex_r::register::Hactlr::FLASHIFREGIONR_BIT | cortex_r::register::Hactlr::PERIPHPREGIONR_BIT | cortex_r::register::Hactlr::QOSR_BIT | cortex_r::register::Hactlr::BUSTIMEOUTR_BIT | cortex_r::register::Hactlr::INTMONR_BIT | cortex_r::register::Hactlr::ERR_BIT | cortex_r::register::Hactlr::TESTR1_BIT,
+    hactlr_bits = const {
+        Hactlr::new_with_raw_value(0)
+            .with_cpuactlr(true)
+            .with_cdbgdci(true)
+            .with_flashifregionr(true)
+            .with_periphpregionr(true)
+            .with_qosr(true)
+            .with_bustimeoutr(true)
+            .with_intmonr(true)
+            .with_err(true)
+            .with_testr1(true)
+            .raw_value()
+    },
     sys_mode = const {
         Cpsr::new_with_raw_value(0)
             .with_mode(ProcessorMode::Sys)

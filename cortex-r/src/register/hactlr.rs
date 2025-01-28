@@ -1,30 +1,39 @@
 //! Code for managing the *Hyp Auxiliary Control Register*
 
 /// The *Hyp Auxiliary Control Register* (HACTRL)
-#[derive(Clone, Copy, PartialEq, Eq)]
-#[repr(transparent)]
-pub struct Hactlr(u32);
+#[bitbybit::bitfield(u32)]
+pub struct Hactlr {
+    /// Controls access to IMP_TESTR1 at EL0 and EL1
+    #[bits(15..=15, rw)]
+    testr1: bool,
+    /// Controls access to IMP_DCERR0, IMP_DCERR1, IMP_ICERR0, IMP_ICERR1,
+    /// IMP_TCMERR0, IMP_TCMERR1, IMP_FLASHERR0, and IMP_FLASHERR1 registers
+    #[bits(13..=13, rw)]
+    err: bool,
+    /// Controls access to IMP_INTMONR at EL1
+    #[bits(12..=12, rw)]
+    intmonr: bool,
+    /// Controls access to IMP_BUSTIMEOUTR at EL1
+    #[bits(10..=10, rw)]
+    bustimeoutr: bool,
+    /// Controls access to QOSR at EL1
+    #[bits(9..=9, rw)]
+    qosr: bool,
+    /// Controls access to IMP_PERIPHPREGIONR at EL1
+    #[bits(8..=8, rw)]
+    periphpregionr: bool,
+    /// Controls access to IMP_FLASHIFREGIONR at EL1
+    #[bits(7..=7, rw)]
+    flashifregionr: bool,
+    /// Controls access to CDBGDCI at EL1
+    #[bits(1..=1, rw)]
+    cdbgdci: bool,
+    /// IMP_CPUACTLR write access control
+    #[bits(0..=0, rw)]
+    cpuactlr: bool,
+}
 
 impl Hactlr {
-    /// The bitmask for the CPUACTLR bit
-    pub const CPUACTLR_BIT: u32 = 1 << 0;
-    /// The bitmask for the CDBGDCI bit
-    pub const CDBGDCI_BIT: u32 = 1 << 1;
-    /// The bitmask for the FLASHIFREGIONR bit
-    pub const FLASHIFREGIONR_BIT: u32 = 1 << 7;
-    /// The bitmask for the PERIPHPREGIONR bit
-    pub const PERIPHPREGIONR_BIT: u32 = 1 << 8;
-    /// The bitmask for the QOSR bit
-    pub const QOSR_BIT: u32 = 1 << 9;
-    /// The bitmask for the BUSTIMEOUTR bit
-    pub const BUSTIMEOUTR_BIT: u32 = 1 << 10;
-    /// The bitmask for the INTMONR bit
-    pub const INTMONR_BIT: u32 = 1 << 12;
-    /// The bitmask for the ERR bit
-    pub const ERR_BIT: u32 = 1 << 13;
-    /// The bitmask for the TESTR1 bit
-    pub const TESTR1_BIT: u32 = 1 << 15;
-
     /// Reads the *Hyp Auxiliary Control Register*
     #[inline]
     pub fn read() -> Hactlr {
@@ -38,7 +47,7 @@ impl Hactlr {
         {
             r = 0;
         }
-        Self(r)
+        Self::new_with_raw_value(r)
     }
 
     /// Write to the *Hyp Auxiliary Control Register*
@@ -47,7 +56,7 @@ impl Hactlr {
         // Safety: Writing this register is atomic
         #[cfg(target_arch = "arm")]
         unsafe {
-            core::arch::asm!("mcr p15, 4, {}, c1, c0, 1", in(reg) _value.0, options(nomem, nostack, preserves_flags));
+            core::arch::asm!("mcr p15, 4, {}, c1, c0, 1", in(reg) _value.raw_value(), options(nomem, nostack, preserves_flags));
         };
     }
 
@@ -60,141 +69,6 @@ impl Hactlr {
         let mut value = Self::read();
         f(&mut value);
         Self::write(value);
-    }
-
-    /// Is the CPUACTLR bit set?
-    pub fn cpuactlr(self) -> bool {
-        (self.0 & Self::CPUACTLR_BIT) != 0
-    }
-
-    /// Set the CPUACTLR bit
-    pub fn set_cpuactlr(&mut self) {
-        self.0 |= Self::CPUACTLR_BIT;
-    }
-
-    /// Clear the CPUACTLR bit
-    pub fn clear_cpuactlr(&mut self) {
-        self.0 &= !Self::CPUACTLR_BIT;
-    }
-
-    /// Is the CDBGDCI bit set?
-    pub fn cdbgdci(self) -> bool {
-        (self.0 & Self::CDBGDCI_BIT) != 0
-    }
-
-    /// Set the CDBGDCI bit
-    pub fn set_cdbgdci(&mut self) {
-        self.0 |= Self::CDBGDCI_BIT;
-    }
-
-    /// Clear the CDBGDCI bit
-    pub fn clear_cdbgdci(&mut self) {
-        self.0 &= !Self::CDBGDCI_BIT;
-    }
-
-    /// Is the FLASHIFREGIONR bit set?
-    pub fn flashifregionr(self) -> bool {
-        (self.0 & Self::FLASHIFREGIONR_BIT) != 0
-    }
-
-    /// Set the FLASHIFREGIONR bit
-    pub fn set_flashifregionr(&mut self) {
-        self.0 |= Self::FLASHIFREGIONR_BIT;
-    }
-
-    /// Clear the FLASHIFREGIONR bit
-    pub fn clear_flashifregionr(&mut self) {
-        self.0 &= !Self::FLASHIFREGIONR_BIT;
-    }
-
-    /// Is the PERIPHPREGIONR bit set?
-    pub fn periphpregionr(self) -> bool {
-        (self.0 & Self::PERIPHPREGIONR_BIT) != 0
-    }
-
-    /// Set the PERIPHPREGIONR bit
-    pub fn set_periphpregionr(&mut self) {
-        self.0 |= Self::PERIPHPREGIONR_BIT;
-    }
-
-    /// Clear the PERIPHPREGIONR bit
-    pub fn clear_periphpregionr(&mut self) {
-        self.0 &= !Self::PERIPHPREGIONR_BIT;
-    }
-
-    /// Is the QOSR bit set?
-    pub fn qosr(self) -> bool {
-        (self.0 & Self::QOSR_BIT) != 0
-    }
-
-    /// Set the QOSR bit
-    pub fn set_qosr(&mut self) {
-        self.0 |= Self::QOSR_BIT;
-    }
-
-    /// Clear the QOSR bit
-    pub fn clear_qosr(&mut self) {
-        self.0 &= !Self::QOSR_BIT;
-    }
-
-    /// Is the BUSTIMEOUTR bit set?
-    pub fn bustimeoutr(self) -> bool {
-        (self.0 & Self::BUSTIMEOUTR_BIT) != 0
-    }
-
-    /// Set the BUSTIMEOUTR bit
-    pub fn set_bustimeoutr(&mut self) {
-        self.0 |= Self::BUSTIMEOUTR_BIT;
-    }
-
-    /// Clear the BUSTIMEOUTR bit
-    pub fn clear_bustimeoutr(&mut self) {
-        self.0 &= !Self::BUSTIMEOUTR_BIT;
-    }
-
-    /// Is the INTMONR bit set?
-    pub fn intmonr(self) -> bool {
-        (self.0 & Self::INTMONR_BIT) != 0
-    }
-
-    /// Set the INTMONR bit
-    pub fn set_intmonr(&mut self) {
-        self.0 |= Self::INTMONR_BIT;
-    }
-
-    /// Clear the INTMONR bit
-    pub fn clear_intmonr(&mut self) {
-        self.0 &= !Self::INTMONR_BIT;
-    }
-
-    /// Is the ERR bit set?
-    pub fn err(self) -> bool {
-        (self.0 & Self::ERR_BIT) != 0
-    }
-
-    /// Set the ERR bit
-    pub fn set_err(&mut self) {
-        self.0 |= Self::ERR_BIT;
-    }
-
-    /// Clear the ERR bit
-    pub fn clear_err(&mut self) {
-        self.0 &= !Self::ERR_BIT;
-    }
-
-    /// Is the TESTR1 bit set?
-    pub fn testr1(self) -> bool {
-        (self.0 & Self::TESTR1_BIT) != 0
-    }
-
-    /// Set the TESTR1 bit
-    pub fn set_testr1(&mut self) {
-        self.0 |= Self::TESTR1_BIT;
-    }
-
-    /// Clear the TESTR1 bit
-    pub fn clear_testr1(&mut self) {
-        self.0 &= !Self::TESTR1_BIT;
     }
 }
 
