@@ -6,6 +6,7 @@ on:
 name: Build
 
 jobs:
+  # Build the workspace for a target architecture
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -28,6 +29,7 @@ jobs:
         run: |
           cargo build --target ${{ matrix.target }}
 
+  # Build the host tools
   build-host:
     runs-on: ubuntu-latest
     strategy:
@@ -45,6 +47,7 @@ jobs:
           cd arm-targets
           cargo build
 
+  # Build the workspace for the target architecture but using Ferrocene
   build-ferrocene:
     runs-on: ubuntu-latest
     strategy:
@@ -67,6 +70,14 @@ jobs:
         run: |
           criticalup run cargo build --target ${{ matrix.target }}
 
+  # Gather all the above build jobs together for the purposes of getting an overall pass-fail
+  build-all:
+    runs-on: ubuntu-latest
+    needs: [build, build-ferrocene, build-host]
+    steps:
+      - run: /bin/true
+
+  # Build the docs for the workspace
   docs:
     runs-on: ubuntu-latest
     strategy:
@@ -89,6 +100,7 @@ jobs:
         run: |
           cargo doc --target ${{ matrix.target }}
 
+  # Build the docs for the host tools
   docs-host:
     runs-on: ubuntu-latest
     strategy:
@@ -106,6 +118,14 @@ jobs:
           cd arm-targets
           cargo doc
 
+  # Gather all the above doc jobs together for the purposes of getting an overall pass-fail
+  docs-all:
+    runs-on: ubuntu-latest
+    needs: [docs, docs-host]
+    steps:
+      - run: /bin/true
+
+  # Format the workspace
   fmt:
     runs-on: ubuntu-latest
     steps:
@@ -119,6 +139,7 @@ jobs:
         run: |
           cargo fmt --check
 
+  # Format the host tools
   fmt-host:
     runs-on: ubuntu-latest
     steps:
@@ -133,6 +154,14 @@ jobs:
           cd arm-targets
           cargo fmt --check
 
+  # Gather all the above fmt jobs together for the purposes of getting an overall pass-fail
+  fmt-all:
+    runs-on: ubuntu-latest
+    needs: [fmt, fmt-host]
+    steps:
+      - run: /bin/true
+
+  # Run clippy on the workpace
   clippy:
     runs-on: ubuntu-latest
     strategy:
@@ -156,6 +185,7 @@ jobs:
         run: |
           cargo clippy --target ${{ matrix.target }}
 
+  # Run clippy on the host tools
   clippy-host:
     runs-on: ubuntu-latest
     strategy:
@@ -173,3 +203,17 @@ jobs:
         run: |
           cd arm-targets
           cargo clippy
+
+  # Gather all the above clippy jobs together for the purposes of getting an overall pass-fail
+  clippy-all:
+    runs-on: ubuntu-latest
+    needs: [clippy, clippy-host]
+    steps:
+      - run: /bin/true
+
+  # Gather all the above xxx-all jobs together for the purposes of getting an overall pass-fail
+  all:
+    runs-on: ubuntu-latest
+    needs: [docs-all, build-all, fmt-all] # not gating on clippy-all
+    steps:
+      - run: /bin/true
