@@ -149,11 +149,10 @@ pub unsafe fn syscall<T>(nr: usize, arg: &T) -> usize {
 #[inline(always)]
 pub unsafe fn syscall1(_nr: usize, _arg: usize) -> usize {
     if cfg!(all(target_arch = "arm", not(feature = "no-semihosting"))) {
-        let mut _nr = _nr as u32;
-        let _arg = _arg as u32;
+        let result: usize;
         #[cfg(arm_isa = "a64")]
         unsafe {
-            core::arch::asm!("HLT 0xF000", inout("r0") _nr, in("r1") _arg, options(nostack, preserves_flags));
+            core::arch::asm!("HLT 0xF000", in("w0") _nr, in("x1") _arg, lateout("x0") result, options(nostack, preserves_flags));
         }
 
         #[cfg(arm_isa = "a32")]
@@ -162,9 +161,9 @@ pub unsafe fn syscall1(_nr: usize, _arg: usize) -> usize {
             // but not SVC instruction, even though both should be equivalent.
             // So prefer SVC but let the user pick HLT.
             if cfg!(feature = "use-hlt") {
-                core::arch::asm!("HLT 0xF000", inout("r0") _nr, in("r1") _arg, options(nostack, preserves_flags));
+                core::arch::asm!("HLT 0xF000", in("r0") _nr, in("r1") _arg, lateout("r0") result, options(nostack, preserves_flags));
             } else {
-                core::arch::asm!("SVC 0x123456", inout("r0") _nr, in("r1") _arg, options(nostack, preserves_flags));
+                core::arch::asm!("SVC 0x123456", in("r0") _nr, in("r1") _arg, lateout("r0") result, options(nostack, preserves_flags));
             }
         }
 
@@ -172,18 +171,18 @@ pub unsafe fn syscall1(_nr: usize, _arg: usize) -> usize {
         unsafe {
             // See note about about SVC vs HLT
             if cfg!(feature = "use-hlt") {
-                core::arch::asm!("HLT 0x3C", inout("r0") _nr, in("r1") _arg, options(nostack, preserves_flags));
+                core::arch::asm!("HLT 0x3C", in("r0") _nr, in("r1") _arg, lateout("r0") result, options(nostack, preserves_flags));
             } else {
-                core::arch::asm!("SVC 0xAB", inout("r0") _nr, in("r1") _arg, options(nostack, preserves_flags));
+                core::arch::asm!("SVC 0xAB", in("r0") _nr, in("r1") _arg, lateout("r0") result, options(nostack, preserves_flags));
             }
         }
 
         #[cfg(all(arm_isa = "t32", arm_profile = "m"))]
         unsafe {
-            core::arch::asm!("BKPT 0xAB", inout("r0") _nr, in("r1") _arg, options(nostack, preserves_flags));
+            core::arch::asm!("BKPT 0xAB", in("r0") _nr, in("r1") _arg, lateout("r0") result, options(nostack, preserves_flags));
         }
 
-        return _nr as usize;
+        return result;
     }
 
     0
