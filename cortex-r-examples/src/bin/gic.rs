@@ -8,10 +8,12 @@ use cortex_r as _;
 use cortex_r_examples as _;
 
 use arm_gic::{
-    gicv3::{GicV3, Group, SgiTarget},
+    gicv3::{Group, SgiTarget},
     IntId,
 };
 use arm_semihosting::{debug, hprintln};
+
+type SingleCoreGic = arm_gic::gicv3::GicV3<1>;
 
 /// The entry-point to the Rust application.
 ///
@@ -44,27 +46,34 @@ fn main() -> Result<(), core::fmt::Error> {
     hprintln!("Found PERIPHBASE {:p}", periphbase);
     let gicd_base = periphbase.wrapping_byte_add(GICD_BASE_OFFSET);
     let gicr_base = periphbase.wrapping_byte_add(GICR_BASE_OFFSET);
+
     // Initialise the GIC.
     hprintln!("Creating GIC driver @ {:p} / {:p}", gicd_base, gicr_base);
-    let mut gic = unsafe { GicV3::new(gicd_base, gicr_base) };
-    hprintln!("Calling git.setup()");
-    gic.setup();
-    hprintln!("Configure SGI");
-    // Configure an SGI and then send it to ourself.
+    let mut gic: SingleCoreGic =
+        unsafe { SingleCoreGic::new(gicd_base.cast(), [gicr_base.cast()]) };
+    hprintln!("Calling git.setup(0)");
+    gic.setup(0);
+    SingleCoreGic::set_priority_mask(0x80);
+
+    // Configure a Software Generated Interrupt for Core 0
+    hprintln!("Configure SGI...");
     let sgi_intid = IntId::sgi(3);
-    GicV3::set_priority_mask(0xFF);
-    gic.set_interrupt_priority(sgi_intid, 0x31);
-    gic.set_group(sgi_intid, Group::Group1NS);
+    gic.set_interrupt_priority(sgi_intid, Some(0), 0x31);
+    gic.set_group(sgi_intid, Some(0), Group::Group1NS);
+
     hprintln!("gic.enable_interrupt()");
-    gic.enable_interrupt(sgi_intid, true);
+    gic.enable_interrupt(sgi_intid, Some(0), true);
+
     hprintln!("Enabling interrupts...");
     dump_cpsr();
     unsafe {
         cortex_r::interrupt::enable();
     }
     dump_cpsr();
+
+    // Send it
     hprintln!("Send SGI");
-    GicV3::send_sgi(
+    SingleCoreGic::send_sgi(
         sgi_intid,
         SgiTarget::List {
             affinity3: 0,
@@ -84,9 +93,9 @@ fn main() -> Result<(), core::fmt::Error> {
 #[no_mangle]
 unsafe extern "C" fn _irq_handler() {
     hprintln!("> IRQ");
-    while let Some(int_id) = GicV3::get_and_acknowledge_interrupt() {
+    while let Some(int_id) = SingleCoreGic::get_and_acknowledge_interrupt() {
         hprintln!("- IRQ handle {:?}", int_id);
-        GicV3::end_interrupt(int_id);
+        SingleCoreGic::end_interrupt(int_id);
     }
     hprintln!("< IRQ");
 }
