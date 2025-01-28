@@ -14,7 +14,7 @@ default-run = "hello"
 cortex-r = { path = "../cortex-r", features=["critical-section-single-core"] }
 cortex-r-rt = { path = "../cortex-r-rt" }
 arm-semihosting = { path = "../arm-semihosting" }
-arm-gic = { path = "../arm-gic", optional = true }
+arm-gic = { git = "https://github.com/jonathanpallant/arm-gic.git", rev="4b7fb201707be062546148bc5c4b70b08c8c0455", optional = true }
 
 [features]
 eabi-fpu = ["cortex-r-rt/eabi-fpu"]
