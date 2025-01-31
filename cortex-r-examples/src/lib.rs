@@ -14,7 +14,5 @@ use cortex_r_rt as _;
 #[cfg(target_os = "none")]
 fn panic(info: &core::panic::PanicInfo) -> ! {
     semihosting::eprintln!("PANIC: {:#?}", info);
-    loop {
-        semihosting::process::abort();
-    }
+    semihosting::process::abort();
 }
