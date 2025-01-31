@@ -473,7 +473,7 @@ core::arch::global_asm!(
         mov     r1, {hactlr_bits}
         orr     r0, r0, r1
         mcr     p15, 4, r0, c1, c0, 1
-        // Program the SPSR - enter sytem mode (0x1F) in Arm mode with IRQ, FIQ masked
+        // Program the SPSR - enter system mode (0x1F) in Arm mode with IRQ, FIQ masked
         mov		r0, {sys_mode}
         msr		spsr_hyp, r0
         adr		r0, 1f
