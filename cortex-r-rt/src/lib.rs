@@ -423,7 +423,11 @@ core::arch::global_asm!(
             .with_f(true)
             .raw_value()
     },
-    te_bit = const cortex_r::register::Sctlr::TE_BIT,
+    te_bit = const {
+        cortex_r::register::Sctlr::new_with_raw_value(0)
+            .with_te(true)
+            .raw_value()
+    }
 );
 
 // Start-up code for Armv7-R.

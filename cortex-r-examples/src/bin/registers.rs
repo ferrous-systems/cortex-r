@@ -35,9 +35,9 @@ pub extern "C" fn kmain() {
         cortex_r::register::Sctlr::read()
     );
     cortex_r::register::Sctlr::modify(|w| {
-        w.set_c();
-        w.set_i();
-        w.set_z();
+        w.set_c(true);
+        w.set_i(true);
+        w.set_z(true);
     });
     println!("{:?} after", cortex_r::register::Sctlr::read());
 
