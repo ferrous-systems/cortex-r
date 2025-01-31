@@ -1,9 +1,26 @@
 //! Code for managing the *Main ID Register*
 
+use arbitrary_int::{u12, u4};
+
 /// The *Main ID Register* (MIDR)
-#[derive(Clone, Copy, PartialEq, Eq)]
-#[repr(transparent)]
-pub struct Midr(u32);
+#[bitbybit::bitfield(u32)]
+pub struct Midr {
+    /// Implementer
+    #[bits(24..=31, r)]
+    implementer: u8,
+    /// Variant
+    #[bits(20..=23, r)]
+    variant: u4,
+    /// Architecture
+    #[bits(16..=19, r)]
+    arch: u4,
+    /// Part Number
+    #[bits(4..=15, r)]
+    part_no: u12,
+    /// Revision
+    #[bits(0..=3, r)]
+    rev: u4,
+}
 
 impl Midr {
     /// Reads the *Main ID Register*
@@ -19,32 +36,7 @@ impl Midr {
         {
             r = 0;
         }
-        Self(r)
-    }
-
-    /// Get the implementer field
-    pub fn implementer(self) -> u32 {
-        self.0 >> 24
-    }
-
-    /// Get the variant field
-    pub fn variant(self) -> u32 {
-        (self.0 >> 20) & 0xF
-    }
-
-    /// Get the arch field
-    pub fn arch(self) -> u32 {
-        (self.0 >> 16) & 0xF
-    }
-
-    /// Get the primary part number field
-    pub fn part_no(self) -> u32 {
-        (self.0 >> 4) & 0xFFF
-    }
-
-    /// Get the rev field
-    pub fn rev(self) -> u32 {
-        self.0 & 0xF
+        Self::new_with_raw_value(r)
     }
 }
 

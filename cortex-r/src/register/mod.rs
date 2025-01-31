@@ -1,10 +1,6 @@
 //! Access registers in Armv7-R and Armv8-R
 
-mod cbar;
-#[doc(inline)]
-pub use cbar::Cbar;
-
-mod cpsr;
+pub mod cpsr;
 #[doc(inline)]
 pub use cpsr::Cpsr;
 
@@ -17,22 +13,10 @@ mod sctlr;
 pub use sctlr::Sctlr;
 
 #[cfg(arm_architecture = "v8-r")]
-mod hactlr;
+mod armv8r;
 #[doc(inline)]
 #[cfg(arm_architecture = "v8-r")]
-pub use hactlr::Hactlr;
-
-#[cfg(arm_architecture = "v8-r")]
-mod hvbar;
-#[doc(inline)]
-#[cfg(arm_architecture = "v8-r")]
-pub use hvbar::Hvbar;
-
-#[cfg(arm_architecture = "v8-r")]
-mod vbar;
-#[doc(inline)]
-#[cfg(arm_architecture = "v8-r")]
-pub use vbar::Vbar;
+pub use armv8r::*;
 
 // TODO:
 

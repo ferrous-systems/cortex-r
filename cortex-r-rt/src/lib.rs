@@ -85,6 +85,11 @@
 
 #![no_std]
 
+use cortex_r::register::{cpsr::ProcessorMode, Cpsr};
+
+#[cfg(arm_architecture = "v8-r")]
+use cortex_r::register::Hactlr;
+
 /// Our default exception handler.
 ///
 /// We end up here if an exception fires and the weak 'PROVIDE' in the link.x
@@ -283,9 +288,13 @@ core::arch::global_asm!(
         rfefd   sp!
     .size _asm_irq_handler, . - _asm_irq_handler
     "#,
-    svc_mode = const cortex_r::register::Cpsr::SVC_MODE,
-    irq_mode = const cortex_r::register::Cpsr::IRQ_MODE,
-    t_bit = const cortex_r::register::Cpsr::T_BIT,
+    svc_mode = const ProcessorMode::Svc as u8,
+    irq_mode = const ProcessorMode::Irq as u8,
+    t_bit = const {
+        Cpsr::new_with_raw_value(0)
+            .with_t(true)
+            .raw_value()
+    },
 );
 
 /// This macro expands to code to turn on the FPU
@@ -386,11 +395,39 @@ core::arch::global_asm!(
         b       .
     .size _el1_start, . - _el1_start
     "#,
-    fiq_mode = const cortex_r::register::Cpsr::FIQ_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
-    irq_mode = const cortex_r::register::Cpsr::IRQ_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
-    svc_mode = const cortex_r::register::Cpsr::SVC_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
-    sys_mode = const cortex_r::register::Cpsr::SYS_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
-    te_bit = const cortex_r::register::Sctlr::TE_BIT
+    fiq_mode = const {
+        Cpsr::new_with_raw_value(0)
+            .with_mode(ProcessorMode::Fiq)
+            .with_i(true)
+            .with_f(true)
+            .raw_value()
+    },
+    irq_mode = const {
+        Cpsr::new_with_raw_value(0)
+            .with_mode(ProcessorMode::Irq)
+            .with_i(true)
+            .with_f(true)
+            .raw_value()
+    },
+    svc_mode = const {
+        Cpsr::new_with_raw_value(0)
+            .with_mode(ProcessorMode::Svc)
+            .with_i(true)
+            .with_f(true)
+            .raw_value()
+    },
+    sys_mode = const {
+        Cpsr::new_with_raw_value(0)
+            .with_mode(ProcessorMode::Sys)
+            .with_i(true)
+            .with_f(true)
+            .raw_value()
+    },
+    te_bit = const {
+        cortex_r::register::Sctlr::new_with_raw_value(0)
+            .with_te(true)
+            .raw_value()
+    }
 );
 
 // Start-up code for Armv7-R.
@@ -427,7 +464,7 @@ core::arch::global_asm!(
     _default_start:
         // Are we in EL2? If not, skip the EL2 setup portion
         mrs     r0, cpsr
-        and     r0, r0, {cpsr_mode_mask}
+        and     r0, r0, 0x1F
         cmp     r0, {cpsr_mode_hyp}
         bne     1f
         // Set stack pointer
@@ -440,7 +477,7 @@ core::arch::global_asm!(
         mov     r1, {hactlr_bits}
         orr     r0, r0, r1
         mcr     p15, 4, r0, c1, c0, 1
-        // Program the SPSR - enter sytem mode (0x1F) in Arm mode with IRQ, FIQ masked
+        // Program the SPSR - enter system mode (0x1F) in Arm mode with IRQ, FIQ masked
         mov		r0, {sys_mode}
         msr		spsr_hyp, r0
         adr		r0, 1f
@@ -457,8 +494,25 @@ core::arch::global_asm!(
         ldr     pc, =_el1_start
     .size _default_start, . - _default_start
     "#,
-    cpsr_mode_mask = const cortex_r::register::Cpsr::MODE_BITS,
-    cpsr_mode_hyp = const cortex_r::register::Cpsr::HYP_MODE,
-    hactlr_bits = const cortex_r::register::Hactlr::CPUACTLR_BIT | cortex_r::register::Hactlr::CDBGDCI_BIT | cortex_r::register::Hactlr::FLASHIFREGIONR_BIT | cortex_r::register::Hactlr::PERIPHPREGIONR_BIT | cortex_r::register::Hactlr::QOSR_BIT | cortex_r::register::Hactlr::BUSTIMEOUTR_BIT | cortex_r::register::Hactlr::INTMONR_BIT | cortex_r::register::Hactlr::ERR_BIT | cortex_r::register::Hactlr::TESTR1_BIT,
-    sys_mode = const cortex_r::register::Cpsr::SYS_MODE | cortex_r::register::Cpsr::I_BIT | cortex_r::register::Cpsr::F_BIT,
+    cpsr_mode_hyp = const ProcessorMode::Hyp as u8,
+    hactlr_bits = const {
+        Hactlr::new_with_raw_value(0)
+            .with_cpuactlr(true)
+            .with_cdbgdci(true)
+            .with_flashifregionr(true)
+            .with_periphpregionr(true)
+            .with_qosr(true)
+            .with_bustimeoutr(true)
+            .with_intmonr(true)
+            .with_err(true)
+            .with_testr1(true)
+            .raw_value()
+    },
+    sys_mode = const {
+        Cpsr::new_with_raw_value(0)
+            .with_mode(ProcessorMode::Sys)
+            .with_i(true)
+            .with_f(true)
+            .raw_value()
+    }
 );

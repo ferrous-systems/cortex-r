@@ -1,44 +1,59 @@
 //! Code for managing the *System Control Register*
 
 /// The *System Control Register* (SCTLR)
-#[derive(Clone, Copy, PartialEq, Eq)]
-#[repr(transparent)]
-pub struct Sctlr(u32);
+#[bitbybit::bitfield(u32)]
+pub struct Sctlr {
+    /// The bitmask for the Instruction Endianness bit
+    #[bits(31..=31, rw)]
+    ie: bool,
+    /// The bitmask for the Thumb Exception Enable bit
+    #[bits(30..=30, rw)]
+    te: bool,
+    /// The bitmask for the Non-Maskable FIQ bit
+    #[bits(27..=27, rw)]
+    nmfi: bool,
+    /// The bitmask for the Exception Endianness bit
+    #[bits(25..=25, rw)]
+    ee: bool,
+    /// The bitmask for the U bit
+    #[bits(22..=22, rw)]
+    u: bool,
+    /// The bitmask for the Fast Interrupt bit
+    #[bits(21..=21, rw)]
+    fi: bool,
+    /// The bitmask for the Divide by Zero Fault bit
+    #[bits(18..=18, rw)]
+    dz: bool,
+    /// The bitmask for the Background Region bit
+    #[bits(17..=17, rw)]
+    br: bool,
+    /// The bitmask for the Round Robin bit
+    #[bits(14..=14, rw)]
+    rr: bool,
+    /// The bitmask for the Exception Vector Table bit
+    #[bits(13..=13, rw)]
+    v: bool,
+    /// The bitmask for the Instruction Cache enable bit
+    #[bits(12..=12, rw)]
+    i: bool,
+    /// The bitmask for the Branch Prediction enable bit
+    #[bits(11..=11, rw)]
+    z: bool,
+    /// The bitmask for the SWP bit
+    #[bits(10..=10, rw)]
+    sw: bool,
+    /// The bitmask for the Cache enable bit
+    #[bits(2..=2, rw)]
+    c: bool,
+    /// The bitmask for the Alignment check bit
+    #[bits(1..=1, rw)]
+    a: bool,
+    /// The bitmask for the MPU bit
+    #[bits(0..=0, rw)]
+    m: bool,
+}
 
 impl Sctlr {
-    /// The bitmask for the Instruction Endianness bit
-    pub const IE_BIT: u32 = 1 << 31;
-    /// The bitmask for the Thumb Exception Enable bit
-    pub const TE_BIT: u32 = 1 << 30;
-    /// The bitmask for the Non-Maskable FIQ bit
-    pub const NMFI_BIT: u32 = 1 << 27;
-    /// The bitmask for the Exception Endianness bit
-    pub const EE_BIT: u32 = 1 << 25;
-    /// The bitmask for the U bit
-    pub const U_BIT: u32 = 1 << 22;
-    /// The bitmask for the Fast Interrupt bit
-    pub const FI_BIT: u32 = 1 << 21;
-    /// The bitmask for the Divide by Zero Fault bit
-    pub const DZ_BIT: u32 = 1 << 18;
-    /// The bitmask for the Background Region bit
-    pub const BR_BIT: u32 = 1 << 17;
-    /// The bitmask for the Round Robin bit
-    pub const RR_BIT: u32 = 1 << 14;
-    /// The bitmask for the Exception Vector Table bit
-    pub const V_BIT: u32 = 1 << 13;
-    /// The bitmask for the Instruction Cache enable bit
-    pub const I_BIT: u32 = 1 << 12;
-    /// The bitmask for the Branch Prediction enable bit
-    pub const Z_BIT: u32 = 1 << 11;
-    /// The bitmask for the SWP bit
-    pub const SW_BIT: u32 = 1 << 10;
-    /// The bitmask for the Cache enable bit
-    pub const C_BIT: u32 = 1 << 2;
-    /// The bitmask for the Alignment check bit
-    pub const A_BIT: u32 = 1 << 1;
-    /// The bitmask for the MPU bit
-    pub const M_BIT: u32 = 1 << 0;
-
     /// Reads the *System Control Register*
     #[inline]
     pub fn read() -> Self {
@@ -52,7 +67,7 @@ impl Sctlr {
         {
             r = 0;
         }
-        Self(r)
+        Self::new_with_raw_value(r)
     }
 
     /// Write to the *System Control Register*
@@ -61,7 +76,7 @@ impl Sctlr {
         // Safety: Writing this register is atomic
         #[cfg(target_arch = "arm")]
         unsafe {
-            core::arch::asm!("mcr p15, 0, {}, c1, c0, 0", in(reg) _value.0, options(nomem, nostack, preserves_flags));
+            core::arch::asm!("mcr p15, 0, {}, c1, c0, 0", in(reg) _value.raw_value(), options(nomem, nostack, preserves_flags));
         };
     }
 
@@ -74,246 +89,6 @@ impl Sctlr {
         let mut value = Self::read();
         f(&mut value);
         Self::write(value);
-    }
-
-    /// Is the IE bit set?
-    pub fn ie(self) -> bool {
-        (self.0 & Self::IE_BIT) != 0
-    }
-
-    /// Set the IE bit
-    pub fn set_ie(&mut self) {
-        self.0 |= Self::IE_BIT;
-    }
-
-    /// Clear the IE bit
-    pub fn clear_ie(&mut self) {
-        self.0 &= !Self::IE_BIT;
-    }
-
-    /// Is the TE bit set?
-    pub fn te(self) -> bool {
-        (self.0 & Self::TE_BIT) != 0
-    }
-
-    /// Set the TE bit
-    pub fn set_te(&mut self) {
-        self.0 |= Self::TE_BIT;
-    }
-
-    /// Clear the TE bit
-    pub fn clear_te(&mut self) {
-        self.0 &= !Self::TE_BIT;
-    }
-
-    /// Is the NMFI bit set?
-    pub fn nmfi(self) -> bool {
-        (self.0 & Self::NMFI_BIT) != 0
-    }
-
-    /// Set the NMFI bit
-    pub fn set_nmfi(&mut self) {
-        self.0 |= Self::NMFI_BIT;
-    }
-
-    /// Clear the NMFI bit
-    pub fn clear_nmfi(&mut self) {
-        self.0 &= !Self::NMFI_BIT;
-    }
-
-    /// Is the EE bit set?
-    pub fn ee(self) -> bool {
-        (self.0 & Self::EE_BIT) != 0
-    }
-
-    /// Set the EE bit
-    pub fn set_ee(&mut self) {
-        self.0 |= Self::EE_BIT;
-    }
-
-    /// Clear the EE bit
-    pub fn clear_ee(&mut self) {
-        self.0 &= !Self::EE_BIT;
-    }
-
-    /// Is the U bit set?
-    pub fn u(self) -> bool {
-        (self.0 & Self::U_BIT) != 0
-    }
-
-    /// Set the U bit
-    pub fn set_u(&mut self) {
-        self.0 |= Self::U_BIT;
-    }
-
-    /// Clear the U bit
-    pub fn clear_u(&mut self) {
-        self.0 &= !Self::U_BIT;
-    }
-
-    /// Is the FI bit set?
-    pub fn fi(self) -> bool {
-        (self.0 & Self::FI_BIT) != 0
-    }
-
-    /// Set the FI bit
-    pub fn set_fi(&mut self) {
-        self.0 |= Self::FI_BIT;
-    }
-
-    /// Clear the FI bit
-    pub fn clear_fi(&mut self) {
-        self.0 &= !Self::FI_BIT;
-    }
-
-    /// Is the DZ bit set?
-    pub fn dz(self) -> bool {
-        (self.0 & Self::DZ_BIT) != 0
-    }
-
-    /// Set the DZ bit
-    pub fn set_dz(&mut self) {
-        self.0 |= Self::DZ_BIT;
-    }
-
-    /// Clear the DZ bit
-    pub fn clear_dz(&mut self) {
-        self.0 &= !Self::DZ_BIT;
-    }
-
-    /// Is the BR bit set?
-    pub fn br(self) -> bool {
-        (self.0 & Self::BR_BIT) != 0
-    }
-
-    /// Set the BR bit
-    pub fn set_br(&mut self) {
-        self.0 |= Self::BR_BIT;
-    }
-
-    /// Clear the BR bit
-    pub fn clear_br(&mut self) {
-        self.0 &= !Self::BR_BIT;
-    }
-
-    /// Is the RR bit set?
-    pub fn rr(self) -> bool {
-        (self.0 & Self::RR_BIT) != 0
-    }
-
-    /// Set the RR bit
-    pub fn set_rr(&mut self) {
-        self.0 |= Self::RR_BIT;
-    }
-
-    /// Clear the RR bit
-    pub fn clear_rr(&mut self) {
-        self.0 &= !Self::RR_BIT;
-    }
-
-    /// Is the V bit set?
-    pub fn v(self) -> bool {
-        (self.0 & Self::V_BIT) != 0
-    }
-
-    /// Set the V bit
-    pub fn set_v(&mut self) {
-        self.0 |= Self::V_BIT;
-    }
-
-    /// Clear the V bit
-    pub fn clear_v(&mut self) {
-        self.0 &= !Self::V_BIT;
-    }
-
-    /// Is the I bit set?
-    pub fn i(self) -> bool {
-        (self.0 & Self::I_BIT) != 0
-    }
-
-    /// Set the I bit
-    pub fn set_i(&mut self) {
-        self.0 |= Self::I_BIT;
-    }
-
-    /// Clear the I bit
-    pub fn clear_i(&mut self) {
-        self.0 &= !Self::I_BIT;
-    }
-
-    /// Is the Z bit set?
-    pub fn z(self) -> bool {
-        (self.0 & Self::Z_BIT) != 0
-    }
-
-    /// Set the Z bit
-    pub fn set_z(&mut self) {
-        self.0 |= Self::Z_BIT;
-    }
-
-    /// Clear the Z bit
-    pub fn clear_z(&mut self) {
-        self.0 &= !Self::Z_BIT;
-    }
-
-    /// Is the SW bit set?
-    pub fn sw(self) -> bool {
-        (self.0 & Self::SW_BIT) != 0
-    }
-
-    /// Set the SW bit
-    pub fn set_sw(&mut self) {
-        self.0 |= Self::SW_BIT;
-    }
-
-    /// Clear the SW bit
-    pub fn clear_sw(&mut self) {
-        self.0 &= !Self::SW_BIT;
-    }
-
-    /// Is the C bit set?
-    pub fn c(self) -> bool {
-        (self.0 & Self::C_BIT) != 0
-    }
-
-    /// Set the C bit
-    pub fn set_c(&mut self) {
-        self.0 |= Self::C_BIT;
-    }
-
-    /// Clear the C bit
-    pub fn clear_c(&mut self) {
-        self.0 &= !Self::C_BIT;
-    }
-
-    /// Is the A bit set?
-    pub fn a(self) -> bool {
-        (self.0 & Self::A_BIT) != 0
-    }
-
-    /// Set the A bit
-    pub fn set_a(&mut self) {
-        self.0 |= Self::A_BIT;
-    }
-
-    /// Clear the A bit
-    pub fn clear_a(&mut self) {
-        self.0 &= !Self::A_BIT;
-    }
-
-    /// Is the M bit set?
-    pub fn m(self) -> bool {
-        (self.0 & Self::M_BIT) != 0
-    }
-
-    /// Set the M bit
-    pub fn set_m(&mut self) {
-        self.0 |= Self::M_BIT;
-    }
-
-    /// Clear the M bit
-    pub fn clear_m(&mut self) {
-        self.0 &= !Self::M_BIT;
     }
 }
 

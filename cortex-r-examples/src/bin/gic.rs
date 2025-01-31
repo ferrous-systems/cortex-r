@@ -43,12 +43,15 @@ fn dump_cpsr() {
 fn main() -> Result<(), core::fmt::Error> {
     // Get the GIC address by reading CBAR
     let periphbase = cortex_r::register::Cbar::read().periphbase();
-    println!("Found PERIPHBASE {:p}", periphbase);
+    println!("Found PERIPHBASE {:010p}", periphbase);
     let gicd_base = periphbase.wrapping_byte_add(GICD_BASE_OFFSET);
     let gicr_base = periphbase.wrapping_byte_add(GICR_BASE_OFFSET);
 
     // Initialise the GIC.
-    println!("Creating GIC driver @ {:p} / {:p}", gicd_base, gicr_base);
+    println!(
+        "Creating GIC driver @ {:010p} / {:010p}",
+        gicd_base, gicr_base
+    );
     let mut gic: SingleCoreGic =
         unsafe { SingleCoreGic::new(gicd_base.cast(), [gicr_base.cast()]) };
     println!("Calling git.setup(0)");

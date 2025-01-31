@@ -7,6 +7,8 @@
 use std::io::Write;
 
 fn main() {
+    arm_targets::process();
+
     match std::env::var("TARGET").expect("TARGET not set").as_str() {
         "armv8r-none-eabihf" => {
             write("memory.x", include_bytes!("mps3-an536.ld"));

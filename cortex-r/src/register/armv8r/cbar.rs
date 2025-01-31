@@ -28,13 +28,13 @@ impl Cbar {
 
 impl core::fmt::Debug for Cbar {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "CBAR {{ PERIPHBASE={:p} }}", self.periphbase())
+        write!(f, "CBAR {{ {:010p} }}", self.periphbase())
     }
 }
 
 #[cfg(feature = "defmt")]
 impl defmt::Format for Cbar {
     fn format(&self, f: defmt::Formatter) {
-        defmt::write!(f, "CBAR {{ PERIPHBASE=0x{:08x} }}", self.0)
+        defmt::write!(f, "CBAR {{ 0x{=usize:08x} }}", self.0 as usize)
     }
 }

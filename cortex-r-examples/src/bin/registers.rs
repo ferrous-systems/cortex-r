@@ -20,18 +20,24 @@ extern "C" {
 pub extern "C" fn kmain() {
     println!("{:?}", cortex_r::register::Midr::read());
     println!("{:?}", cortex_r::register::Cpsr::read());
-    println!("{:?}", cortex_r::register::Cbar::read());
+    #[cfg(arm_architecture = "v8-r")]
+    {
+        println!("{:?}", cortex_r::register::Cbar::read());
+        println!("{:?}", cortex_r::register::Vbar::read());
+        // This only works in EL2 and start-up put us in EL1
+        // println!("{:?}", cortex_r::register::Hvbar::read());
+    }
 
-    println!("_stack_top: {:p}", core::ptr::addr_of!(_stack_top));
+    println!("_stack_top: {:010p}", core::ptr::addr_of!(_stack_top));
 
     println!(
         "{:?} before setting C, I and Z",
         cortex_r::register::Sctlr::read()
     );
     cortex_r::register::Sctlr::modify(|w| {
-        w.set_c();
-        w.set_i();
-        w.set_z();
+        w.set_c(true);
+        w.set_i(true);
+        w.set_z(true);
     });
     println!("{:?} after", cortex_r::register::Sctlr::read());
 
