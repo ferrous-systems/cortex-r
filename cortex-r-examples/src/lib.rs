@@ -13,9 +13,6 @@ use cortex_r_rt as _;
 #[panic_handler]
 #[cfg(target_os = "none")]
 fn panic(info: &core::panic::PanicInfo) -> ! {
-    use arm_semihosting::{debug, heprintln};
-    heprintln!("PANIC: {:#?}", info);
-    loop {
-        debug::exit(debug::EXIT_FAILURE);
-    }
+    semihosting::eprintln!("PANIC: {:#?}", info);
+    semihosting::process::abort();
 }

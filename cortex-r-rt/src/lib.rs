@@ -91,8 +91,8 @@
 /// file hasn't been over-ridden.
 #[no_mangle]
 pub extern "C" fn _default_handler() {
-    arm_semihosting::hprintln!("Unhandled exception!");
-    arm_semihosting::debug::exit(arm_semihosting::debug::EXIT_FAILURE);
+    semihosting::eprintln!("Unhandled exception!");
+    semihosting::process::abort();
 }
 
 // The Interrupt Vector Table, and some default assembly-language handler.
