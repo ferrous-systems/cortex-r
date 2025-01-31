@@ -12,15 +12,12 @@ There are currently three libraries here:
 
 * [cortex-r](./cortex-r/) - support library for Cortex-R CPUs (like [cortex-m])
 * [cortex-r-rt](./cortex-r-rt/) - run-time library for Cortex-R CPUs (like [cortex-m-rt])
-* [arm-semihosting](./arm-semihosting/) - semihosting library for many kinds of Arm CPU (like [cortex-m-semihosting])
 * [arm-targets](./arm-targets/) - a helper library for your build.rs that sets various `--cfg` flags according to the current target
-* [arm-gic](./arm-gic/) - A port of <https://github.com/google/arm-gic> to AArch32
 
 There are also example programs for QEMU in the [cortex-r-examples](./cortex-r-examples/) folder.
 
 [cortex-m]: https://crates.io/crates/cortex-m
 [cortex-m-rt]: https://crates.io/crates/cortex-m-rt
-[cortex-m-semihosting]: https://crates.io/crates/cortex-m-semihosting
 
 ## Licence
 

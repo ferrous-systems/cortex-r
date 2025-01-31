@@ -7,7 +7,7 @@
 use cortex_r as _;
 use cortex_r_examples as _;
 
-use arm_semihosting::hprintln;
+use semihosting::println;
 
 extern "C" {
     static _stack_top: u32;
@@ -18,13 +18,13 @@ extern "C" {
 /// It is called by the start-up code in `cortex-m-rt`.
 #[no_mangle]
 pub extern "C" fn kmain() {
-    hprintln!("{:?}", cortex_r::register::Midr::read());
-    hprintln!("{:?}", cortex_r::register::Cpsr::read());
-    hprintln!("{:?}", cortex_r::register::Cbar::read());
+    println!("{:?}", cortex_r::register::Midr::read());
+    println!("{:?}", cortex_r::register::Cpsr::read());
+    println!("{:?}", cortex_r::register::Cbar::read());
 
-    hprintln!("_stack_top: {:p}", core::ptr::addr_of!(_stack_top));
+    println!("_stack_top: {:p}", core::ptr::addr_of!(_stack_top));
 
-    hprintln!(
+    println!(
         "{:?} before setting C, I and Z",
         cortex_r::register::Sctlr::read()
     );
@@ -33,7 +33,7 @@ pub extern "C" fn kmain() {
         w.set_i();
         w.set_z();
     });
-    hprintln!("{:?} after", cortex_r::register::Sctlr::read());
+    println!("{:?} after", cortex_r::register::Sctlr::read());
 
-    arm_semihosting::debug::exit(arm_semihosting::debug::EXIT_SUCCESS);
+    semihosting::process::exit(0);
 }

@@ -4,7 +4,6 @@ members = [
     "cortex-r",
     "cortex-r-examples",
     "cortex-r-rt",
-    "arm-semihosting",
 ]
 exclude = [
     "arm-targets"

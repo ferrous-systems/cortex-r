@@ -11,7 +11,7 @@ use arm_gic::{
     gicv3::{Group, SgiTarget},
     IntId,
 };
-use arm_semihosting::{debug, hprintln};
+use semihosting::println;
 
 type SingleCoreGic = arm_gic::gicv3::GicV3<1>;
 
@@ -23,7 +23,7 @@ pub extern "C" fn kmain() {
     if let Err(e) = main() {
         panic!("main returned {:?}", e);
     }
-    debug::exit(debug::EXIT_SUCCESS);
+    semihosting::process::exit(0);
 }
 
 /// Offset from PERIPHBASE for GIC Distributor
@@ -34,7 +34,7 @@ const GICR_BASE_OFFSET: usize = 0x0010_0000usize;
 
 fn dump_cpsr() {
     let cpsr = cortex_r::register::Cpsr::read();
-    hprintln!("CPSR: {:?}", cpsr);
+    println!("CPSR: {:?}", cpsr);
 }
 
 /// The main function of our Rust application.
@@ -43,28 +43,28 @@ fn dump_cpsr() {
 fn main() -> Result<(), core::fmt::Error> {
     // Get the GIC address by reading CBAR
     let periphbase = cortex_r::register::Cbar::read().periphbase();
-    hprintln!("Found PERIPHBASE {:p}", periphbase);
+    println!("Found PERIPHBASE {:p}", periphbase);
     let gicd_base = periphbase.wrapping_byte_add(GICD_BASE_OFFSET);
     let gicr_base = periphbase.wrapping_byte_add(GICR_BASE_OFFSET);
 
     // Initialise the GIC.
-    hprintln!("Creating GIC driver @ {:p} / {:p}", gicd_base, gicr_base);
+    println!("Creating GIC driver @ {:p} / {:p}", gicd_base, gicr_base);
     let mut gic: SingleCoreGic =
         unsafe { SingleCoreGic::new(gicd_base.cast(), [gicr_base.cast()]) };
-    hprintln!("Calling git.setup(0)");
+    println!("Calling git.setup(0)");
     gic.setup(0);
     SingleCoreGic::set_priority_mask(0x80);
 
     // Configure a Software Generated Interrupt for Core 0
-    hprintln!("Configure SGI...");
+    println!("Configure SGI...");
     let sgi_intid = IntId::sgi(3);
     gic.set_interrupt_priority(sgi_intid, Some(0), 0x31);
     gic.set_group(sgi_intid, Some(0), Group::Group1NS);
 
-    hprintln!("gic.enable_interrupt()");
+    println!("gic.enable_interrupt()");
     gic.enable_interrupt(sgi_intid, Some(0), true);
 
-    hprintln!("Enabling interrupts...");
+    println!("Enabling interrupts...");
     dump_cpsr();
     unsafe {
         cortex_r::interrupt::enable();
@@ -72,7 +72,7 @@ fn main() -> Result<(), core::fmt::Error> {
     dump_cpsr();
 
     // Send it
-    hprintln!("Send SGI");
+    println!("Send SGI");
     SingleCoreGic::send_sgi(
         sgi_intid,
         SgiTarget::List {
@@ -92,10 +92,10 @@ fn main() -> Result<(), core::fmt::Error> {
 
 #[no_mangle]
 unsafe extern "C" fn _irq_handler() {
-    hprintln!("> IRQ");
+    println!("> IRQ");
     while let Some(int_id) = SingleCoreGic::get_and_acknowledge_interrupt() {
-        hprintln!("- IRQ handle {:?}", int_id);
+        println!("- IRQ handle {:?}", int_id);
         SingleCoreGic::end_interrupt(int_id);
     }
-    hprintln!("< IRQ");
+    println!("< IRQ");
 }

@@ -7,7 +7,7 @@
 use cortex_r as _;
 use cortex_r_examples as _;
 
-use arm_semihosting::hprintln;
+use semihosting::println;
 
 /// The entry-point to the Rust application.
 ///
@@ -26,16 +26,16 @@ fn main() -> Result<(), core::fmt::Error> {
     let x = 1;
     let y = x + 1;
     let z = (y as f64) * 1.5;
-    hprintln!("x = {}, y = {}, z = {:0.3}", x, y, z);
+    println!("x = {}, y = {}, z = {:0.3}", x, y, z);
     cortex_r::svc!(0xABCDEF);
-    hprintln!("x = {}, y = {}, z = {:0.3}", x, y, z);
+    println!("x = {}, y = {}, z = {:0.3}", x, y, z);
     panic!("I am an example panic");
 }
 
 /// This is our SVC exception handler
 #[no_mangle]
 unsafe extern "C" fn _svc_handler(arg: u32) {
-    hprintln!("In _svc_handler, with arg={:#06x}", arg,);
+    println!("In _svc_handler, with arg={:#06x}", arg);
     if arg == 0xABCDEF {
         // test nested SVC calls
         cortex_r::svc!(0x456789);
