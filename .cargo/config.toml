@@ -9,6 +9,3 @@ runner = "qemu-system-arm -machine versatileab -cpu cortex-r5f -semihosting -nog
 # change to '-mcpu=cortex-r5' to '-mcpu=cortex-r5f' if you use eabi-fpu feature, otherwise
 # qemu-system-arm will lock up
 runner = "qemu-system-arm -machine versatileab -cpu cortex-r5 -semihosting -nographic -kernel"
-
-[build]
-target = ["armv7r-none-eabihf"]
